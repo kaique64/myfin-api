@@ -1,4 +1,4 @@
-module finix-api
+module myfin-api
 
 go 1.18
 

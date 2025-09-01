@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"finix-api/internal/config"
+	"myfin-api/internal/config"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

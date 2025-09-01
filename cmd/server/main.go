@@ -1,8 +1,8 @@
 package main
 
 import (
-	"finix-api/internal/config"
-	"finix-api/internal/db"
+	"myfin-api/internal/config"
+	"myfin-api/internal/db"
 	"log"
 
 	"github.com/gin-gonic/gin"

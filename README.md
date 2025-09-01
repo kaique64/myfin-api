@@ -1,6 +1,4 @@
-# 📄 Novo `README.md`
-
-# Finix API – Gin + MongoDB REST API
+# MyFin API – Gin + MongoDB REST API
 
 Este projeto é uma API REST simples construída em **Golang**, usando o framework **Gin** e o banco de dados **MongoDB**.  
 A estrutura segue boas práticas de organização, separando **configuração**, **conexão com banco**, **handlers**, **repositories** e **services**.
@@ -8,6 +6,7 @@ A estrutura segue boas práticas de organização, separando **configuração**,
 ---
 
 ## 📦 Requisitos
+
 - Go 1.18+ instalado
 - MongoDB em execução localmente ou em um container  
   (URI padrão: `mongodb://localhost:27017`)
@@ -17,9 +16,10 @@ A estrutura segue boas práticas de organização, separando **configuração**,
 ## 🚀 Como rodar o projeto
 
 1. **Clonar o repositório**
+
    ```bash
-   git clone https://github.com/your-username/finix-api.git
-   cd finix-api/myapp
+   git clone https://github.com/your-username/myfin-api.git
+   cd myfin-api
    ```
 
 2. **Instalar dependências Go**
@@ -33,7 +33,7 @@ A estrutura segue boas práticas de organização, separando **configuração**,
 
    ```env
    MONGODB_DATABASE_URL=mongodb://localhost:27017
-   MONGODB_DATABASE=finixdb
+   MONGODB_DATABASE=myfindb
    ```
 
 4. **Rodar a aplicação**
@@ -45,8 +45,8 @@ A estrutura segue boas práticas de organização, separando **configuração**,
 
 5. **Testar os endpoints**
 
-   * Health Check: [http://localhost:8080/health](http://localhost:8080/health)
-   * Exemplo de items: [http://localhost:8080/items](http://localhost:8080/items)
+   - Health Check: [http://localhost:8080/health](http://localhost:8080/health)
+   - Exemplo de items: [http://localhost:8080/items](http://localhost:8080/items)
 
 ---
 
@@ -55,7 +55,7 @@ A estrutura segue boas práticas de organização, separando **configuração**,
 ```
 myapp/
 ├── cmd/                 # Ponto de entrada da aplicação
-│   └── server/          
+│   └── server/
 │       └── main.go      # main principal que sobe o servidor
 │
 ├── internal/            # Código interno
@@ -84,6 +84,6 @@ myapp/
 
 ## 🛠 Notas
 
-* Banco de dados padrão: `finixdb`
-* Collection padrão: `items`
-* Você pode alterar as configs no arquivo `.env`.
+- Banco de dados padrão: `myfindb`
+- Collection padrão: `items`
+- Você pode alterar as configs no arquivo `.env`.
