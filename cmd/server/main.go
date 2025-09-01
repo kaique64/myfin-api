@@ -1,9 +1,11 @@
 package main
 
 import (
+	"log"
 	"myfin-api/internal/config"
 	"myfin-api/internal/db"
-	"log"
+	handlers "myfin-api/internal/handler"
+	"myfin-api/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +21,14 @@ func main() {
 		c.JSON(200, gin.H{
 			"status": "OK",
 		})
+	})
+
+	r.POST("/cash-handling", func(c *gin.Context) {
+		handler := handlers.NewCashHandlingHandler(services.NewCashHandlingService())
+		
+		entry := handler.Save(c)
+
+		c.JSON(200, entry)
 	})
 
 	log.Println("🚀 Servidor rodando em http://localhost:8080")
