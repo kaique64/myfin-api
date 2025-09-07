@@ -9,6 +9,7 @@ import (
 type CashHandlingEntryModel struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Amount        float64            `bson:"amount" json:"amount"`
+	Title         string             `bson:"title" json:"title"`
 	Currency      string             `bson:"currency" json:"currency"`
 	Type          string             `bson:"type" json:"type"`
 	Category      string             `bson:"category" json:"category"`

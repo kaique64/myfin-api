@@ -4,12 +4,15 @@ import (
 	"myfin-api/internal/dtos"
 	"myfin-api/internal/model"
 	"myfin-api/internal/repository"
+	"myfin-api/internal/repository/types"
 	"time"
 )
 
+const DateFormat = "02/01/2006"
+
 type CashHandlingService interface {
 	CreateCashHandlingEntry(entry dtos.CreateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error)
-	GetAllCashHandlingEntries(limit, skip int) ([]dtos.CashHandlingEntryResponseDTO, error)
+	GetAllCashHandlingEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.CashHandlingEntryResponseDTO, error)
 }
 
 type cashHandlingService struct {
@@ -23,13 +26,14 @@ func NewCashHandlingService(cashHandlingRepo repository.CashHandlingEntryReposit
 }
 
 func (s *cashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error) {
-	parsedDate, err := time.Parse("02/01/2006", entry.Date)
+	parsedDate, err := time.Parse(DateFormat, entry.Date)
 	if err != nil {
 		return dtos.CashHandlingEntryResponseDTO{}, err
 	}
 
 	cashHandlingEntry := &model.CashHandlingEntryModel{
 		Amount:        entry.Amount,
+		Title:         entry.Title,
 		Currency:      entry.Currency,
 		Type:          entry.Type,
 		Category:      entry.Category,
@@ -43,17 +47,16 @@ func (s *cashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandl
 		return dtos.CashHandlingEntryResponseDTO{}, err
 	}
 
-	dateformat := "02/01/2006"
-
 	response := dtos.CashHandlingEntryResponseDTO{
 		ID:            createdEntry.ID.Hex(),
 		Amount:        createdEntry.Amount,
+		Title:         createdEntry.Title,
 		Currency:      createdEntry.Currency,
 		Type:          createdEntry.Type,
 		Category:      createdEntry.Category,
 		PaymentMethod: createdEntry.PaymentMethod,
 		Description:   createdEntry.Description,
-		Date:          createdEntry.Date.Format(dateformat),
+		Date:          createdEntry.Date.Format(DateFormat),
 		Timestamp:     createdEntry.Timestamp,
 		CreatedAt:     createdEntry.CreatedAt.UTC().Format(time.RFC3339),
 		UpdatedAt:     createdEntry.UpdatedAt.UTC().Format(time.RFC3339),
@@ -62,23 +65,48 @@ func (s *cashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandl
 	return response, nil
 }
 
-func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int) ([]dtos.CashHandlingEntryResponseDTO, error) {
-	entries, err := s.cashHandlingRepo.GetAll(limit, skip)
+func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.CashHandlingEntryResponseDTO, error) {
+	if limit < 0 {
+		limit = 10
+	}
+
+	if limit > 100 {
+		limit = 100
+	}
+
+	if skip < 0 {
+		skip = 0
+	}
+
+	var entries []*model.CashHandlingEntryModel
+	var err error
+
+	if titleFilter != "" || categoryFilter != "" {
+		filter := types.FilterOptions{
+			Title:    titleFilter,
+			Category: categoryFilter,
+		}
+		entries, err = s.cashHandlingRepo.GetAllWithFilter(limit, skip, filter)
+	} else {
+		entries, err = s.cashHandlingRepo.GetAll(limit, skip)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	var response []dtos.CashHandlingEntryResponseDTO
+	response := make([]dtos.CashHandlingEntryResponseDTO, 0, len(entries))
 	for _, entry := range entries {
 		response = append(response, dtos.CashHandlingEntryResponseDTO{
 			ID:            entry.ID.Hex(),
 			Amount:        entry.Amount,
+			Title:         entry.Title,
 			Currency:      entry.Currency,
 			Type:          entry.Type,
 			Category:      entry.Category,
 			PaymentMethod: entry.PaymentMethod,
 			Description:   entry.Description,
-			Date:          entry.Date.Format("02/01/2006"),
+			Date:          entry.Date.Format(DateFormat),
 			Timestamp:     entry.Timestamp,
 			CreatedAt:     entry.CreatedAt.UTC().Format(time.RFC3339),
 			UpdatedAt:     entry.UpdatedAt.UTC().Format(time.RFC3339),
