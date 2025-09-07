@@ -5,6 +5,7 @@ import (
 	"myfin-api/internal/config"
 	"myfin-api/internal/db"
 	handlers "myfin-api/internal/handler"
+	"myfin-api/internal/repository"
 	"myfin-api/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -24,12 +25,10 @@ func main() {
 	})
 
 	r.POST("/cash-handling", func(c *gin.Context) {
-		handler := handlers.NewCashHandlingHandler(services.NewCashHandlingService())
-		
-		entry := handler.Save(c)
+		handler := handlers.NewCashHandlingHandler(services.NewCashHandlingService(repository.NewCashHandlingEntryRepository(db.MongoDatabase)))
 
-		c.JSON(200, entry)
-	})
+		handler.Save(c)
+})
 
 	log.Println("🚀 Servidor rodando em http://localhost:8080")
 	r.Run(":8080")

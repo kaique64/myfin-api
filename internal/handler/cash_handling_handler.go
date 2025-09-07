@@ -3,12 +3,13 @@ package handlers
 import (
 	"myfin-api/internal/dtos"
 	"myfin-api/internal/services"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CashHandlingHandler interface {
-	Save(ctx *gin.Context) dtos.CreateCashHandlingEntryDTO
+	Save(ctx *gin.Context)
 }
 
 type cashHandlingHandler struct {
@@ -21,12 +22,19 @@ func NewCashHandlingHandler(cashHandlingService services.CashHandlingService) Ca
 	}
 }
 
-func (h *cashHandlingHandler) Save(ctx *gin.Context) dtos.CreateCashHandlingEntryDTO {
+func (h *cashHandlingHandler) Save(ctx *gin.Context) {
 	var entry dtos.CreateCashHandlingEntryDTO
 
 	ctx.BindJSON(&entry)
 
-	h.cashHandlingService.CreateCashHandlingEntry(entry)
+	response, err := h.cashHandlingService.CreateCashHandlingEntry(entry)
 
-	return entry
+	if err != nil {
+		ctx.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, response)
 }
