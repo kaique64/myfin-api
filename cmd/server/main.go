@@ -17,6 +17,7 @@ func main() {
 	db.Connect(cfg)
 
 	r := gin.Default()
+	handler := handlers.NewCashHandlingHandler(services.NewCashHandlingService(repository.NewCashHandlingEntryRepository(db.MongoDatabase)))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -25,10 +26,12 @@ func main() {
 	})
 
 	r.POST("/cash-handling", func(c *gin.Context) {
-		handler := handlers.NewCashHandlingHandler(services.NewCashHandlingService(repository.NewCashHandlingEntryRepository(db.MongoDatabase)))
-
 		handler.Save(c)
-})
+	})
+
+	r.GET("/cash-handling", func(c *gin.Context) {
+		handler.GetAll(c)
+	})
 
 	log.Println("🚀 Servidor rodando em http://localhost:8080")
 	r.Run(":8080")

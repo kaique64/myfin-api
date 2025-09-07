@@ -9,6 +9,7 @@ import (
 
 type CashHandlingService interface {
 	CreateCashHandlingEntry(entry dtos.CreateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error)
+	GetAllCashHandlingEntries(limit, skip int) ([]dtos.CashHandlingEntryResponseDTO, error)
 }
 
 type cashHandlingService struct {
@@ -56,6 +57,32 @@ func (s *cashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandl
 		Timestamp:     createdEntry.Timestamp,
 		CreatedAt:     createdEntry.CreatedAt.UTC().Format(time.RFC3339),
 		UpdatedAt:     createdEntry.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+
+	return response, nil
+}
+
+func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int) ([]dtos.CashHandlingEntryResponseDTO, error) {
+	entries, err := s.cashHandlingRepo.GetAll(limit, skip)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []dtos.CashHandlingEntryResponseDTO
+	for _, entry := range entries {
+		response = append(response, dtos.CashHandlingEntryResponseDTO{
+			ID:            entry.ID.Hex(),
+			Amount:        entry.Amount,
+			Currency:      entry.Currency,
+			Type:          entry.Type,
+			Category:      entry.Category,
+			PaymentMethod: entry.PaymentMethod,
+			Description:   entry.Description,
+			Date:          entry.Date.Format("02/01/2006"),
+			Timestamp:     entry.Timestamp,
+			CreatedAt:     entry.CreatedAt.UTC().Format(time.RFC3339),
+			UpdatedAt:     entry.UpdatedAt.UTC().Format(time.RFC3339),
+		})
 	}
 
 	return response, nil
