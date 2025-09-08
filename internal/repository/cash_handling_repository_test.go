@@ -1,12 +1,13 @@
 package repository_test
 
 import (
-	"myfin-api/internal/model"
-	"myfin-api/internal/repository"
-	"myfin-api/internal/repository/types"
 	"strings"
 	"testing"
 	"time"
+
+	"myfin-api/internal/model"
+	"myfin-api/internal/repository"
+	"myfin-api/internal/repository/types"
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
@@ -596,7 +597,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", "invalid-object-id"},
 			{"amount", "invalid-amount"},
-			{"title", 123},              
+			{"title", 123},
 		})
 
 		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
@@ -614,5 +615,81 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
+	})
+}
+
+func TestCashHandlingRepositoryDelete(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("successful_deletion", func(mt *mtest.T) {
+		// Create a valid ObjectID
+		objectID := primitive.NewObjectID()
+
+		// Mock a successful deletion response
+		mt.AddMockResponses(mtest.CreateSuccessResponse(
+			bson.E{Key: "ok", Value: 1},
+			bson.E{Key: "n", Value: 1},
+			bson.E{Key: "deletedCount", Value: 1},
+		))
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		// Call Delete with the valid ID
+		err := repo.Delete(objectID.Hex())
+
+		// Verify no error occurred
+		assert.NoError(t, err)
+	})
+
+	mt.Run("invalid_object_id", func(mt *mtest.T) {
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		// Call Delete with an invalid ID
+		err := repo.Delete("invalid-id")
+
+		// Verify an error occurred
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "ObjectID")
+	})
+
+	mt.Run("not_found", func(mt *mtest.T) {
+		// Create a valid ObjectID that doesn't exist in the database
+		objectID := primitive.NewObjectID()
+
+		// Mock a response for when no document is found (n=0)
+		mt.AddMockResponses(mtest.CreateSuccessResponse(
+			bson.E{Key: "ok", Value: 1},
+			bson.E{Key: "n", Value: 0},
+			bson.E{Key: "deletedCount", Value: 0},
+		))
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		// Call Delete with the valid but non-existent ID
+		err := repo.Delete(objectID.Hex())
+
+		// No error should be returned even if no document was deleted
+		assert.NoError(t, err)
+	})
+
+	mt.Run("database_error", func(mt *mtest.T) {
+		// Create a valid ObjectID
+		objectID := primitive.NewObjectID()
+
+		// Mock a database error response
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{
+			Code:    2,
+			Message: "Database error",
+		}))
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		// Call Delete with the valid ID
+		err := repo.Delete(objectID.Hex())
+
+		// Verify an error occurred
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Database error")
 	})
 }

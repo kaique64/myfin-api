@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"net/http"
+
 	"myfin-api/internal/dtos/validators"
 	"myfin-api/internal/services"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,7 @@ import (
 type CashHandlingHandler interface {
 	Save(ctx *gin.Context)
 	GetAll(ctx *gin.Context)
+	Delete(ctx *gin.Context)
 }
 
 type cashHandlingHandler struct {
@@ -30,7 +32,6 @@ func (h *cashHandlingHandler) Save(ctx *gin.Context) {
 	}
 
 	response, err := h.cashHandlingService.CreateCashHandlingEntry(*entry)
-
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -51,7 +52,6 @@ func (h *cashHandlingHandler) GetAll(ctx *gin.Context) {
 	categoryFilter := ctx.Query("category")
 
 	entries, err := h.cashHandlingService.GetAllCashHandlingEntries(limit, skip, titleFilter, categoryFilter)
-
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to retrieve entries",
@@ -73,3 +73,28 @@ func (h *cashHandlingHandler) GetAll(ctx *gin.Context) {
 		},
 	})
 }
+
+func (h *cashHandlingHandler) Delete(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "ID is required",
+		})
+		return
+	}
+
+	err := h.cashHandlingService.DeleteCashHandlingEntry(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to delete entry",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Entry deleted successfully",
+		"id":      id,
+	})
+}
+

@@ -33,6 +33,10 @@ func main() {
 		handler.GetAll(c)
 	})
 
+	r.DELETE("/cash-handling/:id", func(c *gin.Context) {
+		handler.Delete(c)
+	})
+
 	log.Println("🚀 Servidor rodando em http://localhost:8080")
 	r.Run(":8080")
 }

@@ -43,6 +43,52 @@ func (m *MockCashHandlingRepository) GetAllWithFilter(limit, skip int, filter ty
 	return args.Get(0).([]*model.CashHandlingEntryModel), args.Error(1)
 }
 
+func (m *MockCashHandlingRepository) Delete(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+// Tests for DeleteCashHandlingEntry
+func TestCashHandlingService_DeleteCashHandlingEntry_Success(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockCashHandlingRepository)
+	service := NewCashHandlingService(mockRepo)
+
+	// Create a valid ObjectID
+	objectID := primitive.NewObjectID()
+
+	// Setup mock to return no error
+	mockRepo.On("Delete", objectID.Hex()).Return(nil)
+
+	// Act
+	err := service.DeleteCashHandlingEntry(objectID.Hex())
+
+	// Assert
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestCashHandlingService_DeleteCashHandlingEntry_RepositoryError(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockCashHandlingRepository)
+	service := NewCashHandlingService(mockRepo)
+
+	// Create a valid ObjectID
+	objectID := primitive.NewObjectID()
+
+	// Setup mock to return an error
+	expectedError := errors.New("database error")
+	mockRepo.On("Delete", objectID.Hex()).Return(expectedError)
+
+	// Act
+	err := service.DeleteCashHandlingEntry(objectID.Hex())
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err)
+	mockRepo.AssertExpectations(t)
+}
+
 // Tests for CreateCashHandlingEntry
 func TestCashHandlingService_CreateCashHandlingEntry_Success(t *testing.T) {
 	// Arrange
@@ -845,3 +891,4 @@ func TestCashHandlingServiceGetAllWithFilterEmptyResult(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+

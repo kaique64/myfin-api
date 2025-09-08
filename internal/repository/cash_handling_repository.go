@@ -2,9 +2,10 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"myfin-api/internal/model"
 	"myfin-api/internal/repository/types"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,6 +17,7 @@ type CashHandlingEntryRepository interface {
 	Create(entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error)
 	GetAll(limit, skip int) ([]*model.CashHandlingEntryModel, error)
 	GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.CashHandlingEntryModel, error)
+	Delete(id string) error
 }
 
 type cashHandlingEntryRepository struct {
@@ -71,7 +73,6 @@ func (r *cashHandlingEntryRepository) GetAll(limit, skip int) ([]*model.CashHand
 	options.SetSort(bson.D{{Key: "date", Value: -1}})
 
 	cursor, err := r.collection.Find(ctx, bson.M{}, options)
-
 	if err != nil {
 		return nil, err
 	}
@@ -134,3 +135,18 @@ func (r *cashHandlingEntryRepository) GetAllWithFilter(limit, skip int, filter t
 
 	return entries, cursor.Err()
 }
+
+func (r *cashHandlingEntryRepository) Delete(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objectID}
+	_, err = r.collection.DeleteOne(ctx, filter)
+	return err
+}
+

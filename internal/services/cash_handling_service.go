@@ -13,6 +13,7 @@ const DateFormat = "02/01/2006"
 type CashHandlingService interface {
 	CreateCashHandlingEntry(entry dtos.CreateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error)
 	GetAllCashHandlingEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.CashHandlingEntryResponseDTO, error)
+	DeleteCashHandlingEntry(id string) error
 }
 
 type cashHandlingService struct {
@@ -114,4 +115,8 @@ func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int, titleFi
 	}
 
 	return response, nil
+}
+
+func (s *cashHandlingService) DeleteCashHandlingEntry(id string) error {
+	return s.cashHandlingRepo.Delete(id)
 }
