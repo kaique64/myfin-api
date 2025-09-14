@@ -14,6 +14,7 @@ build:
 clean:
 	@echo "Cleaning up..."
 	@rm -rf ${build_dir}
+	go clean -testcache -cache
 
 test:
 	CGO_ENABLED=0 go test ${main_package_path}
