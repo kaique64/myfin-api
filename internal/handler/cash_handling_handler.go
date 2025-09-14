@@ -13,6 +13,8 @@ type CashHandlingHandler interface {
 	Save(ctx *gin.Context)
 	GetAll(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	Update(ctx *gin.Context)
+	GetByID(ctx *gin.Context)
 }
 
 type cashHandlingHandler struct {
@@ -96,5 +98,47 @@ func (h *cashHandlingHandler) Delete(ctx *gin.Context) {
 		"message": "Entry deleted successfully",
 		"id":      id,
 	})
+}
+
+func (h *cashHandlingHandler) Update(ctx *gin.Context) {
+	entry, id, isValid := validators.ValidateUpdateCashHandlingEntry(ctx)
+	if !isValid {
+		return
+	}
+
+	response, err := h.cashHandlingService.UpdateCashHandlingEntry(id, *entry)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to update entry",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Entry updated successfully",
+		"data":    response,
+	})
+}
+
+func (h *cashHandlingHandler) GetByID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "ID is required",
+		})
+		return
+	}
+
+	entry, err := h.cashHandlingService.GetCashHandlingEntryByID(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to retrieve entry",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, entry)
 }
 

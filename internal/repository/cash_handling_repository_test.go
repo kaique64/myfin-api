@@ -306,10 +306,8 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 	mt.Run("filter_by_title_only", func(mt *mtest.T) {
-		// Create mock data
 		objectID := primitive.NewObjectID()
 
-		// Set up the expected MongoDB response
 		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
 			{Key: "_id", Value: objectID},
 			{Key: "amount", Value: 50.0},
@@ -329,19 +327,15 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 
 		mt.AddMockResponses(first, killCursors)
 
-		// Create the repository
 		repo := repository.NewCashHandlingEntryRepository(mt.DB)
 
-		// Create filter with title only
 		filter := types.FilterOptions{
 			Title:    "coffee",
 			Category: "", // Empty category
 		}
 
-		// Test GetAllWithFilter
 		result, err := repo.GetAllWithFilter(10, 0, filter)
 
-		// Verify the result
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Len(t, result, 1)
@@ -350,7 +344,6 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		assert.Equal(t, "food", result[0].Category)
 	})
 
-	// Test case: Filter by category only
 	mt.Run("filter_by_category_only", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
@@ -386,7 +379,6 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		assert.Equal(t, "Bus Ticket", result[0].Title)
 	})
 
-	// Test case: Filter by both title and category
 	mt.Run("filter_by_both_title_and_category", func(mt *mtest.T) {
 		objectID1 := primitive.NewObjectID()
 		objectID2 := primitive.NewObjectID()
@@ -431,15 +423,13 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, result, 2)
 
-		// Verify both entries match the filter criteria
 		for _, entry := range result {
 			assert.Equal(t, "food", entry.Category)
-			// Check case-insensitive contains for title
+
 			assert.Contains(t, strings.ToLower(entry.Title), "lunch") // Should contain "lunch" (case insensitive)
 		}
 	})
 
-	// Test case: No filters (empty strings)
 	mt.Run("no_filters_empty_strings", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
@@ -468,7 +458,6 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		assert.Equal(t, "Any Title", result[0].Title)
 	})
 
-	// Test case: Zero and negative parameters with filter
 	mt.Run("zero_and_negative_params_with_filter", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
@@ -490,7 +479,6 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			Category: "",
 		}
 
-		// Test with limit=0 and skip=-1 to ensure these branches are covered
 		result, err := repo.GetAllWithFilter(0, -1, filter)
 
 		assert.NoError(t, err)
@@ -498,7 +486,6 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		assert.Equal(t, "Test Entry", result[0].Title)
 	})
 
-	// Test case: Database error with filters
 	mt.Run("database_error_with_filters", func(mt *mtest.T) {
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{
 			Code:    2,
@@ -519,13 +506,9 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		assert.Contains(t, err.Error(), "BadValue")
 	})
 
-	// Test case: Cursor iteration error after successful query
 	mt.Run("cursor_iteration_error_with_filters", func(mt *mtest.T) {
-		// Create a response that will cause cursor iteration issues
-		// This simulates a scenario where Find() succeeds but cursor.Next() or cursor.Err() fails
 		objectID := primitive.NewObjectID()
 
-		// First response with valid data
 		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
 			{Key: "_id", Value: objectID},
 			{Key: "amount", Value: 100.0},
@@ -537,7 +520,6 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			{Key: "date", Value: time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)},
 		})
 
-		// Second response that triggers a cursor error
 		cursorError := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, cursorError)
@@ -623,10 +605,8 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 	defer mt.Close()
 
 	mt.Run("successful_deletion", func(mt *mtest.T) {
-		// Create a valid ObjectID
 		objectID := primitive.NewObjectID()
 
-		// Mock a successful deletion response
 		mt.AddMockResponses(mtest.CreateSuccessResponse(
 			bson.E{Key: "ok", Value: 1},
 			bson.E{Key: "n", Value: 1},
@@ -635,29 +615,23 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 
 		repo := repository.NewCashHandlingEntryRepository(mt.DB)
 
-		// Call Delete with the valid ID
 		err := repo.Delete(objectID.Hex())
 
-		// Verify no error occurred
 		assert.NoError(t, err)
 	})
 
 	mt.Run("invalid_object_id", func(mt *mtest.T) {
 		repo := repository.NewCashHandlingEntryRepository(mt.DB)
 
-		// Call Delete with an invalid ID
 		err := repo.Delete("invalid-id")
 
-		// Verify an error occurred
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "ObjectID")
 	})
 
 	mt.Run("not_found", func(mt *mtest.T) {
-		// Create a valid ObjectID that doesn't exist in the database
 		objectID := primitive.NewObjectID()
 
-		// Mock a response for when no document is found (n=0)
 		mt.AddMockResponses(mtest.CreateSuccessResponse(
 			bson.E{Key: "ok", Value: 1},
 			bson.E{Key: "n", Value: 0},
@@ -666,18 +640,14 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 
 		repo := repository.NewCashHandlingEntryRepository(mt.DB)
 
-		// Call Delete with the valid but non-existent ID
 		err := repo.Delete(objectID.Hex())
 
-		// No error should be returned even if no document was deleted
 		assert.NoError(t, err)
 	})
 
 	mt.Run("database_error", func(mt *mtest.T) {
-		// Create a valid ObjectID
 		objectID := primitive.NewObjectID()
 
-		// Mock a database error response
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{
 			Code:    2,
 			Message: "Database error",
@@ -685,11 +655,267 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 
 		repo := repository.NewCashHandlingEntryRepository(mt.DB)
 
-		// Call Delete with the valid ID
 		err := repo.Delete(objectID.Hex())
 
-		// Verify an error occurred
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Database error")
+	})
+}
+
+func TestCashHandlingRepositoryGetByID(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("successful_retrieval", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+		createdTime := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
+
+		mt.AddMockResponses(mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+			{Key: "_id", Value: objectID},
+			{Key: "amount", Value: 150.75},
+			{Key: "title", Value: "Lunch at restaurant"},
+			{Key: "currency", Value: "BRL"},
+			{Key: "type", Value: "expense"},
+			{Key: "category", Value: "food"},
+			{Key: "payment_method", Value: "credit_card"},
+			{Key: "description", Value: "Lunch at restaurant"},
+			{Key: "date", Value: createdTime},
+			{Key: "timestamp", Value: createdTime.Unix()},
+			{Key: "created_at", Value: createdTime},
+			{Key: "updated_at", Value: createdTime},
+		}))
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		result, err := repo.GetByID(objectID.Hex())
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, objectID, result.ID)
+		assert.Equal(t, 150.75, result.Amount)
+		assert.Equal(t, "Lunch at restaurant", result.Title)
+		assert.Equal(t, "BRL", result.Currency)
+		assert.Equal(t, "expense", result.Type)
+		assert.Equal(t, "food", result.Category)
+		assert.Equal(t, "credit_card", result.PaymentMethod)
+		assert.Equal(t, "Lunch at restaurant", result.Description)
+		assert.Equal(t, createdTime, result.Date)
+		assert.Equal(t, createdTime.Unix(), result.Timestamp)
+		assert.Equal(t, createdTime, result.CreatedAt)
+		assert.Equal(t, createdTime, result.UpdatedAt)
+	})
+
+	mt.Run("invalid_object_id", func(mt *mtest.T) {
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		result, err := repo.GetByID("invalid-id")
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "ObjectID")
+	})
+
+	mt.Run("database_error", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{
+			Code:    2,
+			Message: "Database error",
+		}))
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		result, err := repo.GetByID(objectID.Hex())
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "Database error")
+	})
+}
+
+func TestCashHandlingRepositoryUpdate(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("successful_update", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+		createdTime := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
+		updatedTime := time.Now().UTC()
+
+		mt.AddMockResponses(
+
+			mtest.CreateSuccessResponse(
+				bson.E{Key: "ok", Value: 1},
+				bson.E{Key: "n", Value: 1},
+				bson.E{Key: "nModified", Value: 1},
+			),
+
+			mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+				{Key: "_id", Value: objectID},
+				{Key: "amount", Value: 200.50},
+				{Key: "title", Value: "Updated Title"},
+				{Key: "currency", Value: "USD"},
+				{Key: "type", Value: "expense"},
+				{Key: "category", Value: "entertainment"},
+				{Key: "payment_method", Value: "debit_card"},
+				{Key: "description", Value: "Updated Description"},
+				{Key: "date", Value: time.Date(2025, 10, 15, 0, 0, 0, 0, time.UTC)},
+				{Key: "timestamp", Value: createdTime.Unix()},
+				{Key: "created_at", Value: createdTime},
+				{Key: "updated_at", Value: updatedTime},
+			}),
+		)
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		updateEntry := &model.CashHandlingEntryModel{
+			Amount:        200.50,
+			Title:         "Updated Title",
+			Currency:      "USD",
+			Type:          "expense",
+			Category:      "entertainment",
+			PaymentMethod: "debit_card",
+			Description:   "Updated Description",
+			Date:          time.Date(2025, 10, 15, 0, 0, 0, 0, time.UTC),
+			Timestamp:     createdTime.Unix(),
+			CreatedAt:     createdTime,
+		}
+
+		result, err := repo.Update(objectID.Hex(), updateEntry)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, objectID, result.ID)
+		assert.Equal(t, 200.50, result.Amount)
+		assert.Equal(t, "Updated Title", result.Title)
+		assert.Equal(t, "USD", result.Currency)
+		assert.Equal(t, "expense", result.Type)
+		assert.Equal(t, "entertainment", result.Category)
+		assert.Equal(t, "debit_card", result.PaymentMethod)
+		assert.Equal(t, "Updated Description", result.Description)
+		assert.Equal(t, time.Date(2025, 10, 15, 0, 0, 0, 0, time.UTC), result.Date)
+		assert.Equal(t, createdTime.Unix(), result.Timestamp)
+		assert.Equal(t, createdTime, result.CreatedAt)
+
+		assert.NotEqual(t, updatedTime, result.UpdatedAt)
+	})
+
+	mt.Run("invalid_object_id", func(mt *mtest.T) {
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		updateEntry := &model.CashHandlingEntryModel{
+			Amount:   100.0,
+			Title:    "Test Entry",
+			Date:     time.Now(),
+			Type:     "expense",
+			Category: "test",
+		}
+
+		result, err := repo.Update("invalid-id", updateEntry)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "ObjectID")
+	})
+
+	mt.Run("update_error", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{
+			Code:    2,
+			Message: "Update error",
+		}))
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		updateEntry := &model.CashHandlingEntryModel{
+			Amount:   100.0,
+			Title:    "Test Entry",
+			Date:     time.Now(),
+			Type:     "expense",
+			Category: "test",
+		}
+
+		result, err := repo.Update(objectID.Hex(), updateEntry)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "Update error")
+	})
+
+	mt.Run("get_by_id_error_after_update", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+
+		mt.AddMockResponses(
+
+			mtest.CreateSuccessResponse(
+				bson.E{Key: "ok", Value: 1},
+				bson.E{Key: "n", Value: 1},
+				bson.E{Key: "nModified", Value: 1},
+			),
+
+			mtest.CreateCommandErrorResponse(mtest.CommandError{
+				Code:    2,
+				Message: "GetByID error after update",
+			}),
+		)
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		updateEntry := &model.CashHandlingEntryModel{
+			Amount:   100.0,
+			Title:    "Test Entry",
+			Date:     time.Now(),
+			Type:     "expense",
+			Category: "test",
+		}
+
+		result, err := repo.Update(objectID.Hex(), updateEntry)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "GetByID error after update")
+	})
+
+	mt.Run("update_preserves_id_and_updates_timestamp", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+		createdTime := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
+
+		mt.AddMockResponses(
+
+			mtest.CreateSuccessResponse(
+				bson.E{Key: "ok", Value: 1},
+				bson.E{Key: "n", Value: 1},
+				bson.E{Key: "nModified", Value: 1},
+			),
+
+			mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+				{Key: "_id", Value: objectID},
+				{Key: "amount", Value: 75.0},
+				{Key: "title", Value: "Test Entry"},
+				{Key: "date", Value: time.Now()},
+				{Key: "timestamp", Value: createdTime.Unix()},
+				{Key: "created_at", Value: createdTime},
+				{Key: "updated_at", Value: time.Now()},
+			}),
+		)
+
+		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+
+		differentID := primitive.NewObjectID()
+		updateEntry := &model.CashHandlingEntryModel{
+			ID:     differentID, // This should be ignored and overwritten with the ID from the parameter
+			Amount: 75.0,
+			Title:  "Test Entry",
+			Date:   time.Now(),
+		}
+
+		result, err := repo.Update(objectID.Hex(), updateEntry)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+
+		assert.Equal(t, objectID, result.ID)
+		assert.NotEqual(t, differentID, result.ID)
 	})
 }

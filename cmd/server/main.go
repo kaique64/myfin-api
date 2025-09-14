@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+
 	"myfin-api/internal/config"
 	"myfin-api/internal/db"
 	handlers "myfin-api/internal/handler"
@@ -10,6 +12,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+const cashHandlingPath = "/cash-handling"
+
+var cashHandlingIDPath = fmt.Sprintf("%s/:id", cashHandlingPath)
 
 func main() {
 	cfg := config.LoadConfig()
@@ -25,15 +31,23 @@ func main() {
 		})
 	})
 
-	r.POST("/cash-handling", func(c *gin.Context) {
+	r.POST(cashHandlingPath, func(c *gin.Context) {
 		handler.Save(c)
 	})
 
-	r.GET("/cash-handling", func(c *gin.Context) {
+	r.GET(cashHandlingPath, func(c *gin.Context) {
 		handler.GetAll(c)
 	})
 
-	r.DELETE("/cash-handling/:id", func(c *gin.Context) {
+	r.GET(cashHandlingIDPath, func(c *gin.Context) {
+		handler.GetByID(c)
+	})
+
+	r.PUT(cashHandlingIDPath, func(c *gin.Context) {
+		handler.Update(c)
+	})
+
+	r.DELETE(cashHandlingIDPath, func(c *gin.Context) {
 		handler.Delete(c)
 	})
 

@@ -18,6 +18,8 @@ type CashHandlingEntryRepository interface {
 	GetAll(limit, skip int) ([]*model.CashHandlingEntryModel, error)
 	GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.CashHandlingEntryModel, error)
 	Delete(id string) error
+	Update(id string, entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error)
+	GetByID(id string) (*model.CashHandlingEntryModel, error)
 }
 
 type cashHandlingEntryRepository struct {
@@ -150,3 +152,56 @@ func (r *cashHandlingEntryRepository) Delete(id string) error {
 	return err
 }
 
+func (r *cashHandlingEntryRepository) Update(id string, entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	entry.ID = objectID
+	entry.UpdatedAt = time.Now().UTC().Local()
+
+	filter := bson.M{"_id": objectID}
+	update := bson.M{
+		"$set": bson.M{
+			"amount":         entry.Amount,
+			"title":          entry.Title,
+			"currency":       entry.Currency,
+			"type":           entry.Type,
+			"category":       entry.Category,
+			"payment_method": entry.PaymentMethod,
+			"description":    entry.Description,
+			"date":           entry.Date,
+			"updated_at":     entry.UpdatedAt,
+		},
+	}
+
+	_, err = r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.GetByID(id)
+}
+
+func (r *cashHandlingEntryRepository) GetByID(id string) (*model.CashHandlingEntryModel, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"_id": objectID}
+	var entry model.CashHandlingEntryModel
+	err = r.collection.FindOne(ctx, filter).Decode(&entry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entry, nil
+}

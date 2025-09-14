@@ -1,8 +1,9 @@
 package validators
 
 import (
-	"myfin-api/internal/dtos"
 	"net/http"
+
+	"myfin-api/internal/dtos"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -34,7 +35,6 @@ func ValidateCreateCashHandlingEntry(ctx *gin.Context) (*dtos.CreateCashHandling
 	return &entry, true
 }
 
-// getCreateCashHandlingValidationMessage returns appropriate error messages for CreateCashHandlingEntryDTO validation
 func getCreateCashHandlingValidationMessage(fieldError validator.FieldError) string {
 	switch fieldError.Tag() {
 	case "required":

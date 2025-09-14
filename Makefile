@@ -19,5 +19,7 @@ test:
 	CGO_ENABLED=0 go test ${main_package_path}
 
 test-verbose:
-	CGO_ENABLED=0 go test -v ${main_package_path}
+	CGO_ENABLED=0 go test -v -coverprofile=coverage.out ${main_package_path}
+	@go tool cover -func=coverage.out
+	@go tool cover -html=coverage.out
 
