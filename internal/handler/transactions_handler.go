@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CashHandlingHandler interface {
+type TransactionsHandler interface {
 	Save(ctx *gin.Context)
 	GetAll(ctx *gin.Context)
 	Delete(ctx *gin.Context)
@@ -17,23 +17,23 @@ type CashHandlingHandler interface {
 	GetByID(ctx *gin.Context)
 }
 
-type cashHandlingHandler struct {
-	cashHandlingService services.CashHandlingService
+type transactionsHandler struct {
+	transactionsService services.TransactionsService
 }
 
-func NewCashHandlingHandler(cashHandlingService services.CashHandlingService) CashHandlingHandler {
-	return &cashHandlingHandler{
-		cashHandlingService: cashHandlingService,
+func NewTransactionsHandler(transactionsService services.TransactionsService) TransactionsHandler {
+	return &transactionsHandler{
+		transactionsService: transactionsService,
 	}
 }
 
-func (h *cashHandlingHandler) Save(ctx *gin.Context) {
-	entry, isValid := validators.ValidateCreateCashHandlingEntry(ctx)
+func (h *transactionsHandler) Save(ctx *gin.Context) {
+	entry, isValid := validators.ValidateCreateTransactionsEntry(ctx)
 	if !isValid {
 		return
 	}
 
-	response, err := h.cashHandlingService.CreateCashHandlingEntry(*entry)
+	response, err := h.transactionsService.CreateTransactionsEntry(*entry)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -44,7 +44,7 @@ func (h *cashHandlingHandler) Save(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, response)
 }
 
-func (h *cashHandlingHandler) GetAll(ctx *gin.Context) {
+func (h *transactionsHandler) GetAll(ctx *gin.Context) {
 	limit, skip, isValid := validators.ValidateGetAllPaginationParams(ctx)
 	if !isValid {
 		return
@@ -53,7 +53,7 @@ func (h *cashHandlingHandler) GetAll(ctx *gin.Context) {
 	titleFilter := ctx.Query("title")
 	categoryFilter := ctx.Query("category")
 
-	entries, err := h.cashHandlingService.GetAllCashHandlingEntries(limit, skip, titleFilter, categoryFilter)
+	entries, err := h.transactionsService.GetAllTransactionsEntries(limit, skip, titleFilter, categoryFilter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to retrieve entries",
@@ -76,7 +76,7 @@ func (h *cashHandlingHandler) GetAll(ctx *gin.Context) {
 	})
 }
 
-func (h *cashHandlingHandler) Delete(ctx *gin.Context) {
+func (h *transactionsHandler) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -85,7 +85,7 @@ func (h *cashHandlingHandler) Delete(ctx *gin.Context) {
 		return
 	}
 
-	err := h.cashHandlingService.DeleteCashHandlingEntry(id)
+	err := h.transactionsService.DeleteTransactionsEntry(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to delete entry",
@@ -100,13 +100,13 @@ func (h *cashHandlingHandler) Delete(ctx *gin.Context) {
 	})
 }
 
-func (h *cashHandlingHandler) Update(ctx *gin.Context) {
-	entry, id, isValid := validators.ValidateUpdateCashHandlingEntry(ctx)
+func (h *transactionsHandler) Update(ctx *gin.Context) {
+	entry, id, isValid := validators.ValidateUpdateTransactionsEntry(ctx)
 	if !isValid {
 		return
 	}
 
-	response, err := h.cashHandlingService.UpdateCashHandlingEntry(id, *entry)
+	response, err := h.transactionsService.UpdateTransactionsEntry(id, *entry)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to update entry",
@@ -121,7 +121,7 @@ func (h *cashHandlingHandler) Update(ctx *gin.Context) {
 	})
 }
 
-func (h *cashHandlingHandler) GetByID(ctx *gin.Context) {
+func (h *transactionsHandler) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -130,7 +130,7 @@ func (h *cashHandlingHandler) GetByID(ctx *gin.Context) {
 		return
 	}
 
-	entry, err := h.cashHandlingService.GetCashHandlingEntryByID(id)
+	entry, err := h.transactionsService.GetTransactionsEntryByID(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to retrieve entry",

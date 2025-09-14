@@ -1,6 +1,6 @@
 package dtos
 
-type UpdateCashHandlingEntryDTO struct {
+type UpdateTransactionsEntryDTO struct {
 	Amount        float64 `json:"amount" binding:"required,gt=0"`
 	Title         string  `json:"title" binding:"required"`
 	Currency      string  `json:"currency" binding:"required,len=3"`
@@ -10,4 +10,3 @@ type UpdateCashHandlingEntryDTO struct {
 	Description   string  `json:"description" binding:"min=1"`
 	Date          string  `json:"date" binding:"required,datetime=02/01/2006"`
 }
-

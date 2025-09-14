@@ -13,9 +13,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const cashHandlingPath = "/cash-handling"
+const transactionsPath = "/transactions"
 
-var cashHandlingIDPath = fmt.Sprintf("%s/:id", cashHandlingPath)
+var transactionsIDPath = fmt.Sprintf("%s/:id", transactionsPath)
 
 func main() {
 	cfg := config.LoadConfig()
@@ -23,7 +23,7 @@ func main() {
 	db.Connect(cfg)
 
 	r := gin.Default()
-	handler := handlers.NewCashHandlingHandler(services.NewCashHandlingService(repository.NewCashHandlingEntryRepository(db.MongoDatabase)))
+	handler := handlers.NewTransactionsHandler(services.NewTransactionsService(repository.NewTransactionsEntryRepository(db.MongoDatabase)))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -31,23 +31,23 @@ func main() {
 		})
 	})
 
-	r.POST(cashHandlingPath, func(c *gin.Context) {
+	r.POST(transactionsPath, func(c *gin.Context) {
 		handler.Save(c)
 	})
 
-	r.GET(cashHandlingPath, func(c *gin.Context) {
+	r.GET(transactionsPath, func(c *gin.Context) {
 		handler.GetAll(c)
 	})
 
-	r.GET(cashHandlingIDPath, func(c *gin.Context) {
+	r.GET(transactionsIDPath, func(c *gin.Context) {
 		handler.GetByID(c)
 	})
 
-	r.PUT(cashHandlingIDPath, func(c *gin.Context) {
+	r.PUT(transactionsIDPath, func(c *gin.Context) {
 		handler.Update(c)
 	})
 
-	r.DELETE(cashHandlingIDPath, func(c *gin.Context) {
+	r.DELETE(transactionsIDPath, func(c *gin.Context) {
 		handler.Delete(c)
 	})
 

@@ -13,29 +13,29 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type CashHandlingEntryRepository interface {
-	Create(entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error)
-	GetAll(limit, skip int) ([]*model.CashHandlingEntryModel, error)
-	GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.CashHandlingEntryModel, error)
+type TransactionsEntryRepository interface {
+	Create(entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error)
+	GetAll(limit, skip int) ([]*model.TransactionsEntryModel, error)
+	GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.TransactionsEntryModel, error)
 	Delete(id string) error
-	Update(id string, entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error)
-	GetByID(id string) (*model.CashHandlingEntryModel, error)
+	Update(id string, entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error)
+	GetByID(id string) (*model.TransactionsEntryModel, error)
 }
 
-type cashHandlingEntryRepository struct {
+type transactionsEntryRepository struct {
 	database   *mongo.Database
 	collection *mongo.Collection
 }
 
-func NewCashHandlingEntryRepository(database *mongo.Database) CashHandlingEntryRepository {
-	collection := database.Collection("cash_handling_entries")
-	return &cashHandlingEntryRepository{
+func NewTransactionsEntryRepository(database *mongo.Database) TransactionsEntryRepository {
+	collection := database.Collection("transactions_entries")
+	return &transactionsEntryRepository{
 		database:   database,
 		collection: collection,
 	}
 }
 
-func (r *cashHandlingEntryRepository) Create(entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error) {
+func (r *transactionsEntryRepository) Create(entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -58,7 +58,7 @@ func (r *cashHandlingEntryRepository) Create(entry *model.CashHandlingEntryModel
 	return entry, nil
 }
 
-func (r *cashHandlingEntryRepository) GetAll(limit, skip int) ([]*model.CashHandlingEntryModel, error) {
+func (r *transactionsEntryRepository) GetAll(limit, skip int) ([]*model.TransactionsEntryModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -80,10 +80,10 @@ func (r *cashHandlingEntryRepository) GetAll(limit, skip int) ([]*model.CashHand
 	}
 	defer cursor.Close(ctx)
 
-	entries := make([]*model.CashHandlingEntryModel, 0)
+	entries := make([]*model.TransactionsEntryModel, 0)
 
 	for cursor.Next(ctx) {
-		var entry model.CashHandlingEntryModel
+		var entry model.TransactionsEntryModel
 		if err := cursor.Decode(&entry); err != nil {
 			return nil, err
 		}
@@ -93,7 +93,7 @@ func (r *cashHandlingEntryRepository) GetAll(limit, skip int) ([]*model.CashHand
 	return entries, nil
 }
 
-func (r *cashHandlingEntryRepository) GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.CashHandlingEntryModel, error) {
+func (r *transactionsEntryRepository) GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.TransactionsEntryModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -125,10 +125,10 @@ func (r *cashHandlingEntryRepository) GetAllWithFilter(limit, skip int, filter t
 	}
 	defer cursor.Close(ctx)
 
-	entries := make([]*model.CashHandlingEntryModel, 0)
+	entries := make([]*model.TransactionsEntryModel, 0)
 
 	for cursor.Next(ctx) {
-		var entry model.CashHandlingEntryModel
+		var entry model.TransactionsEntryModel
 		if err := cursor.Decode(&entry); err != nil {
 			return nil, err
 		}
@@ -138,7 +138,7 @@ func (r *cashHandlingEntryRepository) GetAllWithFilter(limit, skip int, filter t
 	return entries, cursor.Err()
 }
 
-func (r *cashHandlingEntryRepository) Delete(id string) error {
+func (r *transactionsEntryRepository) Delete(id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -152,7 +152,7 @@ func (r *cashHandlingEntryRepository) Delete(id string) error {
 	return err
 }
 
-func (r *cashHandlingEntryRepository) Update(id string, entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error) {
+func (r *transactionsEntryRepository) Update(id string, entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -187,7 +187,7 @@ func (r *cashHandlingEntryRepository) Update(id string, entry *model.CashHandlin
 	return r.GetByID(id)
 }
 
-func (r *cashHandlingEntryRepository) GetByID(id string) (*model.CashHandlingEntryModel, error) {
+func (r *transactionsEntryRepository) GetByID(id string) (*model.TransactionsEntryModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -197,7 +197,7 @@ func (r *cashHandlingEntryRepository) GetByID(id string) (*model.CashHandlingEnt
 	}
 
 	filter := bson.M{"_id": objectID}
-	var entry model.CashHandlingEntryModel
+	var entry model.TransactionsEntryModel
 	err = r.collection.FindOne(ctx, filter).Decode(&entry)
 	if err != nil {
 		return nil, err

@@ -9,8 +9,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ValidateUpdateCashHandlingEntry(ctx *gin.Context) (*dtos.UpdateCashHandlingEntryDTO, string, bool) {
-	var entry dtos.UpdateCashHandlingEntryDTO
+func ValidateUpdateTransactionsEntry(ctx *gin.Context) (*dtos.UpdateTransactionsEntryDTO, string, bool) {
+	var entry dtos.UpdateTransactionsEntryDTO
 
 	id := ctx.Param("id")
 	if id == "" {
@@ -24,7 +24,7 @@ func ValidateUpdateCashHandlingEntry(ctx *gin.Context) (*dtos.UpdateCashHandling
 		var errorMessage string
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			for _, fieldError := range validationErrors {
-				errorMessage = getUpdateCashHandlingValidationMessage(fieldError)
+				errorMessage = getUpdateTransactionsValidationMessage(fieldError)
 				break
 			}
 		} else {
@@ -40,7 +40,7 @@ func ValidateUpdateCashHandlingEntry(ctx *gin.Context) (*dtos.UpdateCashHandling
 	return &entry, id, true
 }
 
-func getUpdateCashHandlingValidationMessage(fieldError validator.FieldError) string {
+func getUpdateTransactionsValidationMessage(fieldError validator.FieldError) string {
 	switch fieldError.Field() {
 	case "Amount":
 		return "Amount must be greater than 0"

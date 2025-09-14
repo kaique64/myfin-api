@@ -15,33 +15,33 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockCashHandlingService struct {
+type MockTransactionsService struct {
 	mock.Mock
 }
 
-func (m *MockCashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error) {
+func (m *MockTransactionsService) CreateTransactionsEntry(entry dtos.CreateTransactionsEntryDTO) (dtos.TransactionsEntryResponseDTO, error) {
 	args := m.Called(entry)
-	return args.Get(0).(dtos.CashHandlingEntryResponseDTO), args.Error(1)
+	return args.Get(0).(dtos.TransactionsEntryResponseDTO), args.Error(1)
 }
 
-func (m *MockCashHandlingService) GetAllCashHandlingEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.CashHandlingEntryResponseDTO, error) {
+func (m *MockTransactionsService) GetAllTransactionsEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.TransactionsEntryResponseDTO, error) {
 	args := m.Called(limit, skip, titleFilter, categoryFilter)
-	return args.Get(0).([]dtos.CashHandlingEntryResponseDTO), args.Error(1)
+	return args.Get(0).([]dtos.TransactionsEntryResponseDTO), args.Error(1)
 }
 
-func (m *MockCashHandlingService) DeleteCashHandlingEntry(id string) error {
+func (m *MockTransactionsService) DeleteTransactionsEntry(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-func (m *MockCashHandlingService) UpdateCashHandlingEntry(id string, entry dtos.UpdateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error) {
+func (m *MockTransactionsService) UpdateTransactionsEntry(id string, entry dtos.UpdateTransactionsEntryDTO) (dtos.TransactionsEntryResponseDTO, error) {
 	args := m.Called(id, entry)
-	return args.Get(0).(dtos.CashHandlingEntryResponseDTO), args.Error(1)
+	return args.Get(0).(dtos.TransactionsEntryResponseDTO), args.Error(1)
 }
 
-func (m *MockCashHandlingService) GetCashHandlingEntryByID(id string) (dtos.CashHandlingEntryResponseDTO, error) {
+func (m *MockTransactionsService) GetTransactionsEntryByID(id string) (dtos.TransactionsEntryResponseDTO, error) {
 	args := m.Called(id)
-	return args.Get(0).(dtos.CashHandlingEntryResponseDTO), args.Error(1)
+	return args.Get(0).(dtos.TransactionsEntryResponseDTO), args.Error(1)
 }
 
 func setupRouter() *gin.Engine {
@@ -52,15 +52,15 @@ func setupRouter() *gin.Engine {
 
 func TestSaveHandler(t *testing.T) {
 	t.Run("successful_creation", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.POST("/cash-handling", func(c *gin.Context) {
+		router.POST("/transactions", func(c *gin.Context) {
 			handler.Save(c)
 		})
 
-		validEntry := dtos.CreateCashHandlingEntryDTO{
+		validEntry := dtos.CreateTransactionsEntryDTO{
 			Amount:        100.0,
 			Title:         "Test Entry",
 			Currency:      "USD",
@@ -71,7 +71,7 @@ func TestSaveHandler(t *testing.T) {
 			Date:          "15/03/2025",
 		}
 
-		expectedResponse := dtos.CashHandlingEntryResponseDTO{
+		expectedResponse := dtos.TransactionsEntryResponseDTO{
 			ID:            "123456789012345678901234",
 			Amount:        100.0,
 			Title:         "Test Entry",
@@ -86,11 +86,11 @@ func TestSaveHandler(t *testing.T) {
 			UpdatedAt:     "2025-03-15T10:30:00Z",
 		}
 
-		mockService.On("CreateCashHandlingEntry", mock.AnythingOfType("dtos.CreateCashHandlingEntryDTO")).Return(expectedResponse, nil)
+		mockService.On("CreateTransactionsEntry", mock.AnythingOfType("dtos.CreateTransactionsEntryDTO")).Return(expectedResponse, nil)
 
 		jsonPayload, _ := json.Marshal(validEntry)
 
-		req, _ := http.NewRequest("POST", "/cash-handling", bytes.NewBuffer(jsonPayload))
+		req, _ := http.NewRequest("POST", "/transactions", bytes.NewBuffer(jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -98,7 +98,7 @@ func TestSaveHandler(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
-		var response dtos.CashHandlingEntryResponseDTO
+		var response dtos.TransactionsEntryResponseDTO
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedResponse.ID, response.ID)
@@ -109,15 +109,15 @@ func TestSaveHandler(t *testing.T) {
 	})
 
 	t.Run("service_error", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.POST("/cash-handling", func(c *gin.Context) {
+		router.POST("/transactions", func(c *gin.Context) {
 			handler.Save(c)
 		})
 
-		validEntry := dtos.CreateCashHandlingEntryDTO{
+		validEntry := dtos.CreateTransactionsEntryDTO{
 			Amount:        100.0,
 			Title:         "Test Entry",
 			Currency:      "USD",
@@ -129,11 +129,11 @@ func TestSaveHandler(t *testing.T) {
 		}
 
 		expectedError := errors.New("database error")
-		mockService.On("CreateCashHandlingEntry", mock.AnythingOfType("dtos.CreateCashHandlingEntryDTO")).Return(dtos.CashHandlingEntryResponseDTO{}, expectedError)
+		mockService.On("CreateTransactionsEntry", mock.AnythingOfType("dtos.CreateTransactionsEntryDTO")).Return(dtos.TransactionsEntryResponseDTO{}, expectedError)
 
 		jsonPayload, _ := json.Marshal(validEntry)
 
-		req, _ := http.NewRequest("POST", "/cash-handling", bytes.NewBuffer(jsonPayload))
+		req, _ := http.NewRequest("POST", "/transactions", bytes.NewBuffer(jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -150,17 +150,17 @@ func TestSaveHandler(t *testing.T) {
 	})
 
 	t.Run("invalid_request_body", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.POST("/cash-handling", func(c *gin.Context) {
+		router.POST("/transactions", func(c *gin.Context) {
 			handler.Save(c)
 		})
 
 		invalidJSON := []byte(`{"amount": "invalid", "title": 123}`)
 
-		req, _ := http.NewRequest("POST", "/cash-handling", bytes.NewBuffer(invalidJSON))
+		req, _ := http.NewRequest("POST", "/transactions", bytes.NewBuffer(invalidJSON))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -168,21 +168,21 @@ func TestSaveHandler(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
-		mockService.AssertNotCalled(t, "CreateCashHandlingEntry")
+		mockService.AssertNotCalled(t, "CreateTransactionsEntry")
 	})
 }
 
 func TestGetAllHandler(t *testing.T) {
 	t.Run("successful_retrieval", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling", func(c *gin.Context) {
+		router.GET("/transactions", func(c *gin.Context) {
 			handler.GetAll(c)
 		})
 
-		expectedEntries := []dtos.CashHandlingEntryResponseDTO{
+		expectedEntries := []dtos.TransactionsEntryResponseDTO{
 			{
 				ID:            "123456789012345678901234",
 				Amount:        100.0,
@@ -213,9 +213,9 @@ func TestGetAllHandler(t *testing.T) {
 			},
 		}
 
-		mockService.On("GetAllCashHandlingEntries", 10, 0, "", "").Return(expectedEntries, nil)
+		mockService.On("GetAllTransactionsEntries", 10, 0, "", "").Return(expectedEntries, nil)
 
-		req, _ := http.NewRequest("GET", "/cash-handling?limit=10&skip=0", nil)
+		req, _ := http.NewRequest("GET", "/transactions?limit=10&skip=0", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -240,15 +240,15 @@ func TestGetAllHandler(t *testing.T) {
 	})
 
 	t.Run("with_filters", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling", func(c *gin.Context) {
+		router.GET("/transactions", func(c *gin.Context) {
 			handler.GetAll(c)
 		})
 
-		filteredEntries := []dtos.CashHandlingEntryResponseDTO{
+		filteredEntries := []dtos.TransactionsEntryResponseDTO{
 			{
 				ID:            "123456789012345678901234",
 				Amount:        100.0,
@@ -265,9 +265,9 @@ func TestGetAllHandler(t *testing.T) {
 			},
 		}
 
-		mockService.On("GetAllCashHandlingEntries", 10, 0, "lunch", "food").Return(filteredEntries, nil)
+		mockService.On("GetAllTransactionsEntries", 10, 0, "lunch", "food").Return(filteredEntries, nil)
 
-		req, _ := http.NewRequest("GET", "/cash-handling?limit=10&skip=0&title=lunch&category=food", nil)
+		req, _ := http.NewRequest("GET", "/transactions?limit=10&skip=0&title=lunch&category=food", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -291,18 +291,18 @@ func TestGetAllHandler(t *testing.T) {
 	})
 
 	t.Run("service_error", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling", func(c *gin.Context) {
+		router.GET("/transactions", func(c *gin.Context) {
 			handler.GetAll(c)
 		})
 
 		expectedError := errors.New("database error")
-		mockService.On("GetAllCashHandlingEntries", 10, 0, "", "").Return([]dtos.CashHandlingEntryResponseDTO{}, expectedError)
+		mockService.On("GetAllTransactionsEntries", 10, 0, "", "").Return([]dtos.TransactionsEntryResponseDTO{}, expectedError)
 
-		req, _ := http.NewRequest("GET", "/cash-handling?limit=10&skip=0", nil)
+		req, _ := http.NewRequest("GET", "/transactions?limit=10&skip=0", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -319,40 +319,40 @@ func TestGetAllHandler(t *testing.T) {
 	})
 
 	t.Run("invalid_pagination_params", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling", func(c *gin.Context) {
+		router.GET("/transactions", func(c *gin.Context) {
 			handler.GetAll(c)
 		})
 
-		req, _ := http.NewRequest("GET", "/cash-handling?limit=invalid&skip=abc", nil)
+		req, _ := http.NewRequest("GET", "/transactions?limit=invalid&skip=abc", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
-		mockService.AssertNotCalled(t, "GetAllCashHandlingEntries")
+		mockService.AssertNotCalled(t, "GetAllTransactionsEntries")
 	})
 }
 
 func TestDeleteHandler(t *testing.T) {
 	t.Run("successful_deletion", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.DELETE("/cash-handling/:id", func(c *gin.Context) {
+		router.DELETE("/transactions/:id", func(c *gin.Context) {
 			handler.Delete(c)
 		})
 
 		validID := "123456789012345678901234"
 
-		mockService.On("DeleteCashHandlingEntry", validID).Return(nil)
+		mockService.On("DeleteTransactionsEntry", validID).Return(nil)
 
-		req, _ := http.NewRequest("DELETE", "/cash-handling/"+validID, nil)
+		req, _ := http.NewRequest("DELETE", "/transactions/"+validID, nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -369,35 +369,35 @@ func TestDeleteHandler(t *testing.T) {
 	})
 
 	t.Run("missing_id", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.DELETE("/cash-handling/:id", func(c *gin.Context) {
+		router.DELETE("/transactions/:id", func(c *gin.Context) {
 			handler.Delete(c)
 		})
 
-		req, _ := http.NewRequest("DELETE", "/cash-handling/", nil)
+		req, _ := http.NewRequest("DELETE", "/transactions/", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 
-		mockService.AssertNotCalled(t, "DeleteCashHandlingEntry")
+		mockService.AssertNotCalled(t, "DeleteTransactionsEntry")
 	})
 
 	t.Run("empty_id", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.DELETE("/cash-handling/", func(c *gin.Context) {
+		router.DELETE("/transactions/", func(c *gin.Context) {
 			c.Params = append(c.Params, gin.Param{Key: "id", Value: ""})
 			handler.Delete(c)
 		})
 
-		req, _ := http.NewRequest("DELETE", "/cash-handling/", nil)
+		req, _ := http.NewRequest("DELETE", "/transactions/", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -409,24 +409,24 @@ func TestDeleteHandler(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "ID is required", response["error"])
 
-		mockService.AssertNotCalled(t, "DeleteCashHandlingEntry")
+		mockService.AssertNotCalled(t, "DeleteTransactionsEntry")
 	})
 
 	t.Run("service_error", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.DELETE("/cash-handling/:id", func(c *gin.Context) {
+		router.DELETE("/transactions/:id", func(c *gin.Context) {
 			handler.Delete(c)
 		})
 
 		validID := "123456789012345678901234"
 
 		expectedError := errors.New("database error")
-		mockService.On("DeleteCashHandlingEntry", validID).Return(expectedError)
+		mockService.On("DeleteTransactionsEntry", validID).Return(expectedError)
 
-		req, _ := http.NewRequest("DELETE", "/cash-handling/"+validID, nil)
+		req, _ := http.NewRequest("DELETE", "/transactions/"+validID, nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -443,20 +443,20 @@ func TestDeleteHandler(t *testing.T) {
 	})
 
 	t.Run("invalid_id_format", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.DELETE("/cash-handling/:id", func(c *gin.Context) {
+		router.DELETE("/transactions/:id", func(c *gin.Context) {
 			handler.Delete(c)
 		})
 
 		invalidID := "invalid-id-format"
 
 		expectedError := errors.New("the provided hex string is not a valid ObjectID")
-		mockService.On("DeleteCashHandlingEntry", invalidID).Return(expectedError)
+		mockService.On("DeleteTransactionsEntry", invalidID).Return(expectedError)
 
-		req, _ := http.NewRequest("DELETE", "/cash-handling/"+invalidID, nil)
+		req, _ := http.NewRequest("DELETE", "/transactions/"+invalidID, nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -475,17 +475,17 @@ func TestDeleteHandler(t *testing.T) {
 
 func TestUpdateHandler(t *testing.T) {
 	t.Run("successful_update", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.PUT("/cash-handling/:id", func(c *gin.Context) {
+		router.PUT("/transactions/:id", func(c *gin.Context) {
 			handler.Update(c)
 		})
 
 		validID := "123456789012345678901234"
 
-		validEntry := dtos.UpdateCashHandlingEntryDTO{
+		validEntry := dtos.UpdateTransactionsEntryDTO{
 			Amount:        200.50,
 			Title:         "Updated Entry",
 			Currency:      "USD",
@@ -496,7 +496,7 @@ func TestUpdateHandler(t *testing.T) {
 			Date:          "15/10/2025",
 		}
 
-		expectedResponse := dtos.CashHandlingEntryResponseDTO{
+		expectedResponse := dtos.TransactionsEntryResponseDTO{
 			ID:            validID,
 			Amount:        200.50,
 			Title:         "Updated Entry",
@@ -511,11 +511,11 @@ func TestUpdateHandler(t *testing.T) {
 			UpdatedAt:     "2025-10-15T10:30:00Z",
 		}
 
-		mockService.On("UpdateCashHandlingEntry", validID, mock.AnythingOfType("dtos.UpdateCashHandlingEntryDTO")).Return(expectedResponse, nil)
+		mockService.On("UpdateTransactionsEntry", validID, mock.AnythingOfType("dtos.UpdateTransactionsEntryDTO")).Return(expectedResponse, nil)
 
 		jsonPayload, _ := json.Marshal(validEntry)
 
-		req, _ := http.NewRequest("PUT", "/cash-handling/"+validID, bytes.NewBuffer(jsonPayload))
+		req, _ := http.NewRequest("PUT", "/transactions/"+validID, bytes.NewBuffer(jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -545,11 +545,11 @@ func TestUpdateHandler(t *testing.T) {
 	})
 
 	t.Run("invalid_request_body", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.PUT("/cash-handling/:id", func(c *gin.Context) {
+		router.PUT("/transactions/:id", func(c *gin.Context) {
 			handler.Update(c)
 		})
 
@@ -557,7 +557,7 @@ func TestUpdateHandler(t *testing.T) {
 
 		invalidJSON := []byte(`{"amount": "invalid", "title": 123}`)
 
-		req, _ := http.NewRequest("PUT", "/cash-handling/"+validID, bytes.NewBuffer(invalidJSON))
+		req, _ := http.NewRequest("PUT", "/transactions/"+validID, bytes.NewBuffer(invalidJSON))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -565,19 +565,19 @@ func TestUpdateHandler(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
-		mockService.AssertNotCalled(t, "UpdateCashHandlingEntry")
+		mockService.AssertNotCalled(t, "UpdateTransactionsEntry")
 	})
 
 	t.Run("missing_id", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.PUT("/cash-handling/:id", func(c *gin.Context) {
+		router.PUT("/transactions/:id", func(c *gin.Context) {
 			handler.Update(c)
 		})
 
-		validEntry := dtos.UpdateCashHandlingEntryDTO{
+		validEntry := dtos.UpdateTransactionsEntryDTO{
 			Amount:        200.50,
 			Title:         "Updated Entry",
 			Currency:      "USD",
@@ -590,7 +590,7 @@ func TestUpdateHandler(t *testing.T) {
 
 		jsonPayload, _ := json.Marshal(validEntry)
 
-		req, _ := http.NewRequest("PUT", "/cash-handling/", bytes.NewBuffer(jsonPayload))
+		req, _ := http.NewRequest("PUT", "/transactions/", bytes.NewBuffer(jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -598,20 +598,20 @@ func TestUpdateHandler(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 
-		mockService.AssertNotCalled(t, "UpdateCashHandlingEntry")
+		mockService.AssertNotCalled(t, "UpdateTransactionsEntry")
 	})
 
 	t.Run("empty_id", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.PUT("/cash-handling/", func(c *gin.Context) {
+		router.PUT("/transactions/", func(c *gin.Context) {
 			c.Params = append(c.Params, gin.Param{Key: "id", Value: ""})
 			handler.Update(c)
 		})
 
-		validEntry := dtos.UpdateCashHandlingEntryDTO{
+		validEntry := dtos.UpdateTransactionsEntryDTO{
 			Amount:        200.50,
 			Title:         "Updated Entry",
 			Currency:      "USD",
@@ -624,7 +624,7 @@ func TestUpdateHandler(t *testing.T) {
 
 		jsonPayload, _ := json.Marshal(validEntry)
 
-		req, _ := http.NewRequest("PUT", "/cash-handling/", bytes.NewBuffer(jsonPayload))
+		req, _ := http.NewRequest("PUT", "/transactions/", bytes.NewBuffer(jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -632,21 +632,21 @@ func TestUpdateHandler(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
-		mockService.AssertNotCalled(t, "UpdateCashHandlingEntry")
+		mockService.AssertNotCalled(t, "UpdateTransactionsEntry")
 	})
 
 	t.Run("service_error", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.PUT("/cash-handling/:id", func(c *gin.Context) {
+		router.PUT("/transactions/:id", func(c *gin.Context) {
 			handler.Update(c)
 		})
 
 		validID := "123456789012345678901234"
 
-		validEntry := dtos.UpdateCashHandlingEntryDTO{
+		validEntry := dtos.UpdateTransactionsEntryDTO{
 			Amount:        200.50,
 			Title:         "Updated Entry",
 			Currency:      "USD",
@@ -658,11 +658,11 @@ func TestUpdateHandler(t *testing.T) {
 		}
 
 		expectedError := errors.New("database error")
-		mockService.On("UpdateCashHandlingEntry", validID, mock.AnythingOfType("dtos.UpdateCashHandlingEntryDTO")).Return(dtos.CashHandlingEntryResponseDTO{}, expectedError)
+		mockService.On("UpdateTransactionsEntry", validID, mock.AnythingOfType("dtos.UpdateTransactionsEntryDTO")).Return(dtos.TransactionsEntryResponseDTO{}, expectedError)
 
 		jsonPayload, _ := json.Marshal(validEntry)
 
-		req, _ := http.NewRequest("PUT", "/cash-handling/"+validID, bytes.NewBuffer(jsonPayload))
+		req, _ := http.NewRequest("PUT", "/transactions/"+validID, bytes.NewBuffer(jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -680,11 +680,11 @@ func TestUpdateHandler(t *testing.T) {
 	})
 
 	t.Run("invalid_date_format", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.PUT("/cash-handling/:id", func(c *gin.Context) {
+		router.PUT("/transactions/:id", func(c *gin.Context) {
 			handler.Update(c)
 		})
 
@@ -703,7 +703,7 @@ func TestUpdateHandler(t *testing.T) {
 
 		jsonPayload, _ := json.Marshal(invalidEntry)
 
-		req, _ := http.NewRequest("PUT", "/cash-handling/"+validID, bytes.NewBuffer(jsonPayload))
+		req, _ := http.NewRequest("PUT", "/transactions/"+validID, bytes.NewBuffer(jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -716,23 +716,23 @@ func TestUpdateHandler(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Contains(t, response["error"], "Date must be in format")
 
-		mockService.AssertNotCalled(t, "UpdateCashHandlingEntry")
+		mockService.AssertNotCalled(t, "UpdateTransactionsEntry")
 	})
 }
 
 func TestGetByIDHandler(t *testing.T) {
 	t.Run("successful_retrieval", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling/:id", func(c *gin.Context) {
+		router.GET("/transactions/:id", func(c *gin.Context) {
 			handler.GetByID(c)
 		})
 
 		validID := "123456789012345678901234"
 
-		expectedResponse := dtos.CashHandlingEntryResponseDTO{
+		expectedResponse := dtos.TransactionsEntryResponseDTO{
 			ID:            validID,
 			Amount:        150.75,
 			Title:         "Lunch at restaurant",
@@ -747,16 +747,16 @@ func TestGetByIDHandler(t *testing.T) {
 			UpdatedAt:     "2025-09-06T14:30:00Z",
 		}
 
-		mockService.On("GetCashHandlingEntryByID", validID).Return(expectedResponse, nil)
+		mockService.On("GetTransactionsEntryByID", validID).Return(expectedResponse, nil)
 
-		req, _ := http.NewRequest("GET", "/cash-handling/"+validID, nil)
+		req, _ := http.NewRequest("GET", "/transactions/"+validID, nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
-		var response dtos.CashHandlingEntryResponseDTO
+		var response dtos.TransactionsEntryResponseDTO
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedResponse.ID, response.ID)
@@ -776,35 +776,35 @@ func TestGetByIDHandler(t *testing.T) {
 	})
 
 	t.Run("missing_id", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling/:id", func(c *gin.Context) {
+		router.GET("/transactions/:id", func(c *gin.Context) {
 			handler.GetByID(c)
 		})
 
-		req, _ := http.NewRequest("GET", "/cash-handling/", nil)
+		req, _ := http.NewRequest("GET", "/transactions/", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 
-		mockService.AssertNotCalled(t, "GetCashHandlingEntryByID")
+		mockService.AssertNotCalled(t, "GetTransactionsEntryByID")
 	})
 
 	t.Run("empty_id", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling/", func(c *gin.Context) {
+		router.GET("/transactions/", func(c *gin.Context) {
 			c.Params = append(c.Params, gin.Param{Key: "id", Value: ""})
 			handler.GetByID(c)
 		})
 
-		req, _ := http.NewRequest("GET", "/cash-handling/", nil)
+		req, _ := http.NewRequest("GET", "/transactions/", nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -816,24 +816,24 @@ func TestGetByIDHandler(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "ID is required", response["error"])
 
-		mockService.AssertNotCalled(t, "GetCashHandlingEntryByID")
+		mockService.AssertNotCalled(t, "GetTransactionsEntryByID")
 	})
 
 	t.Run("service_error", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling/:id", func(c *gin.Context) {
+		router.GET("/transactions/:id", func(c *gin.Context) {
 			handler.GetByID(c)
 		})
 
 		validID := "123456789012345678901234"
 
 		expectedError := errors.New("database error")
-		mockService.On("GetCashHandlingEntryByID", validID).Return(dtos.CashHandlingEntryResponseDTO{}, expectedError)
+		mockService.On("GetTransactionsEntryByID", validID).Return(dtos.TransactionsEntryResponseDTO{}, expectedError)
 
-		req, _ := http.NewRequest("GET", "/cash-handling/"+validID, nil)
+		req, _ := http.NewRequest("GET", "/transactions/"+validID, nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -850,20 +850,20 @@ func TestGetByIDHandler(t *testing.T) {
 	})
 
 	t.Run("not_found_error", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling/:id", func(c *gin.Context) {
+		router.GET("/transactions/:id", func(c *gin.Context) {
 			handler.GetByID(c)
 		})
 
 		validID := "123456789012345678901234"
 
 		expectedError := errors.New("entry not found")
-		mockService.On("GetCashHandlingEntryByID", validID).Return(dtos.CashHandlingEntryResponseDTO{}, expectedError)
+		mockService.On("GetTransactionsEntryByID", validID).Return(dtos.TransactionsEntryResponseDTO{}, expectedError)
 
-		req, _ := http.NewRequest("GET", "/cash-handling/"+validID, nil)
+		req, _ := http.NewRequest("GET", "/transactions/"+validID, nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -880,20 +880,20 @@ func TestGetByIDHandler(t *testing.T) {
 	})
 
 	t.Run("invalid_id_format", func(t *testing.T) {
-		mockService := new(MockCashHandlingService)
-		handler := NewCashHandlingHandler(mockService)
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
 		router := setupRouter()
 
-		router.GET("/cash-handling/:id", func(c *gin.Context) {
+		router.GET("/transactions/:id", func(c *gin.Context) {
 			handler.GetByID(c)
 		})
 
 		invalidID := "invalid-id-format"
 
 		expectedError := errors.New("the provided hex string is not a valid ObjectID")
-		mockService.On("GetCashHandlingEntryByID", invalidID).Return(dtos.CashHandlingEntryResponseDTO{}, expectedError)
+		mockService.On("GetTransactionsEntryByID", invalidID).Return(dtos.TransactionsEntryResponseDTO{}, expectedError)
 
-		req, _ := http.NewRequest("GET", "/cash-handling/"+invalidID, nil)
+		req, _ := http.NewRequest("GET", "/transactions/"+invalidID, nil)
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)

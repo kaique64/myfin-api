@@ -11,31 +11,31 @@ import (
 
 const DateFormat = "02/01/2006"
 
-type CashHandlingService interface {
-	CreateCashHandlingEntry(entry dtos.CreateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error)
-	GetAllCashHandlingEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.CashHandlingEntryResponseDTO, error)
-	DeleteCashHandlingEntry(id string) error
-	UpdateCashHandlingEntry(id string, entry dtos.UpdateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error)
-	GetCashHandlingEntryByID(id string) (dtos.CashHandlingEntryResponseDTO, error)
+type TransactionsService interface {
+	CreateTransactionsEntry(entry dtos.CreateTransactionsEntryDTO) (dtos.TransactionsEntryResponseDTO, error)
+	GetAllTransactionsEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.TransactionsEntryResponseDTO, error)
+	DeleteTransactionsEntry(id string) error
+	UpdateTransactionsEntry(id string, entry dtos.UpdateTransactionsEntryDTO) (dtos.TransactionsEntryResponseDTO, error)
+	GetTransactionsEntryByID(id string) (dtos.TransactionsEntryResponseDTO, error)
 }
 
-type cashHandlingService struct {
-	cashHandlingRepo repository.CashHandlingEntryRepository
+type transactionsService struct {
+	transactionsRepo repository.TransactionsEntryRepository
 }
 
-func NewCashHandlingService(cashHandlingRepo repository.CashHandlingEntryRepository) CashHandlingService {
-	return &cashHandlingService{
-		cashHandlingRepo: cashHandlingRepo,
+func NewTransactionsService(transactionsRepo repository.TransactionsEntryRepository) TransactionsService {
+	return &transactionsService{
+		transactionsRepo: transactionsRepo,
 	}
 }
 
-func (s *cashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error) {
+func (s *transactionsService) CreateTransactionsEntry(entry dtos.CreateTransactionsEntryDTO) (dtos.TransactionsEntryResponseDTO, error) {
 	parsedDate, err := time.Parse(DateFormat, entry.Date)
 	if err != nil {
-		return dtos.CashHandlingEntryResponseDTO{}, err
+		return dtos.TransactionsEntryResponseDTO{}, err
 	}
 
-	cashHandlingEntry := &model.CashHandlingEntryModel{
+	transactionsEntry := &model.TransactionsEntryModel{
 		Amount:        entry.Amount,
 		Title:         entry.Title,
 		Currency:      entry.Currency,
@@ -46,12 +46,12 @@ func (s *cashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandl
 		Date:          parsedDate,
 	}
 
-	createdEntry, err := s.cashHandlingRepo.Create(cashHandlingEntry)
+	createdEntry, err := s.transactionsRepo.Create(transactionsEntry)
 	if err != nil {
-		return dtos.CashHandlingEntryResponseDTO{}, err
+		return dtos.TransactionsEntryResponseDTO{}, err
 	}
 
-	response := dtos.CashHandlingEntryResponseDTO{
+	response := dtos.TransactionsEntryResponseDTO{
 		ID:            createdEntry.ID.Hex(),
 		Amount:        createdEntry.Amount,
 		Title:         createdEntry.Title,
@@ -69,7 +69,7 @@ func (s *cashHandlingService) CreateCashHandlingEntry(entry dtos.CreateCashHandl
 	return response, nil
 }
 
-func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.CashHandlingEntryResponseDTO, error) {
+func (s *transactionsService) GetAllTransactionsEntries(limit, skip int, titleFilter, categoryFilter string) ([]dtos.TransactionsEntryResponseDTO, error) {
 	if limit < 0 {
 		limit = 10
 	}
@@ -82,7 +82,7 @@ func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int, titleFi
 		skip = 0
 	}
 
-	var entries []*model.CashHandlingEntryModel
+	var entries []*model.TransactionsEntryModel
 	var err error
 
 	if titleFilter != "" || categoryFilter != "" {
@@ -90,18 +90,18 @@ func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int, titleFi
 			Title:    titleFilter,
 			Category: categoryFilter,
 		}
-		entries, err = s.cashHandlingRepo.GetAllWithFilter(limit, skip, filter)
+		entries, err = s.transactionsRepo.GetAllWithFilter(limit, skip, filter)
 	} else {
-		entries, err = s.cashHandlingRepo.GetAll(limit, skip)
+		entries, err = s.transactionsRepo.GetAll(limit, skip)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	response := make([]dtos.CashHandlingEntryResponseDTO, 0, len(entries))
+	response := make([]dtos.TransactionsEntryResponseDTO, 0, len(entries))
 	for _, entry := range entries {
-		response = append(response, dtos.CashHandlingEntryResponseDTO{
+		response = append(response, dtos.TransactionsEntryResponseDTO{
 			ID:            entry.ID.Hex(),
 			Amount:        entry.Amount,
 			Title:         entry.Title,
@@ -120,22 +120,22 @@ func (s *cashHandlingService) GetAllCashHandlingEntries(limit, skip int, titleFi
 	return response, nil
 }
 
-func (s *cashHandlingService) DeleteCashHandlingEntry(id string) error {
-	return s.cashHandlingRepo.Delete(id)
+func (s *transactionsService) DeleteTransactionsEntry(id string) error {
+	return s.transactionsRepo.Delete(id)
 }
 
-func (s *cashHandlingService) UpdateCashHandlingEntry(id string, entry dtos.UpdateCashHandlingEntryDTO) (dtos.CashHandlingEntryResponseDTO, error) {
+func (s *transactionsService) UpdateTransactionsEntry(id string, entry dtos.UpdateTransactionsEntryDTO) (dtos.TransactionsEntryResponseDTO, error) {
 	parsedDate, err := time.Parse(DateFormat, entry.Date)
 	if err != nil {
-		return dtos.CashHandlingEntryResponseDTO{}, err
+		return dtos.TransactionsEntryResponseDTO{}, err
 	}
 
-	existingEntry, err := s.cashHandlingRepo.GetByID(id)
+	existingEntry, err := s.transactionsRepo.GetByID(id)
 	if err != nil {
-		return dtos.CashHandlingEntryResponseDTO{}, err
+		return dtos.TransactionsEntryResponseDTO{}, err
 	}
 
-	cashHandlingEntry := &model.CashHandlingEntryModel{
+	transactionsEntry := &model.TransactionsEntryModel{
 		Amount:        entry.Amount,
 		Title:         entry.Title,
 		Currency:      entry.Currency,
@@ -148,12 +148,12 @@ func (s *cashHandlingService) UpdateCashHandlingEntry(id string, entry dtos.Upda
 		CreatedAt:     existingEntry.CreatedAt,
 	}
 
-	updatedEntry, err := s.cashHandlingRepo.Update(id, cashHandlingEntry)
+	updatedEntry, err := s.transactionsRepo.Update(id, transactionsEntry)
 	if err != nil {
-		return dtos.CashHandlingEntryResponseDTO{}, err
+		return dtos.TransactionsEntryResponseDTO{}, err
 	}
 
-	response := dtos.CashHandlingEntryResponseDTO{
+	response := dtos.TransactionsEntryResponseDTO{
 		ID:            updatedEntry.ID.Hex(),
 		Amount:        updatedEntry.Amount,
 		Title:         updatedEntry.Title,
@@ -171,13 +171,13 @@ func (s *cashHandlingService) UpdateCashHandlingEntry(id string, entry dtos.Upda
 	return response, nil
 }
 
-func (s *cashHandlingService) GetCashHandlingEntryByID(id string) (dtos.CashHandlingEntryResponseDTO, error) {
-	entry, err := s.cashHandlingRepo.GetByID(id)
+func (s *transactionsService) GetTransactionsEntryByID(id string) (dtos.TransactionsEntryResponseDTO, error) {
+	entry, err := s.transactionsRepo.GetByID(id)
 	if err != nil {
-		return dtos.CashHandlingEntryResponseDTO{}, err
+		return dtos.TransactionsEntryResponseDTO{}, err
 	}
 
-	response := dtos.CashHandlingEntryResponseDTO{
+	response := dtos.TransactionsEntryResponseDTO{
 		ID:            entry.ID.Hex(),
 		Amount:        entry.Amount,
 		Title:         entry.Title,

@@ -1,6 +1,6 @@
 package dtos
 
-type CashHandlingEntryResponseDTO struct {
+type TransactionsEntryResponseDTO struct {
 	ID            string  `bson:"_id"`
 	Amount        float64 `bson:"amount"`
 	Title         string  `bson:"title"`

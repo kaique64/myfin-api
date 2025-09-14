@@ -9,14 +9,14 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ValidateCreateCashHandlingEntry(ctx *gin.Context) (*dtos.CreateCashHandlingEntryDTO, bool) {
-	var entry dtos.CreateCashHandlingEntryDTO
+func ValidateCreateTransactionsEntry(ctx *gin.Context) (*dtos.CreateTransactionsEntryDTO, bool) {
+	var entry dtos.CreateTransactionsEntryDTO
 
 	if err := ctx.ShouldBindJSON(&entry); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			errors := make(map[string]string)
 			for _, fieldError := range validationErrors {
-				errors[fieldError.Field()] = getCreateCashHandlingValidationMessage(fieldError)
+				errors[fieldError.Field()] = getCreateTransactionsValidationMessage(fieldError)
 			}
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"error":   "Validation failed",
@@ -35,7 +35,7 @@ func ValidateCreateCashHandlingEntry(ctx *gin.Context) (*dtos.CreateCashHandling
 	return &entry, true
 }
 
-func getCreateCashHandlingValidationMessage(fieldError validator.FieldError) string {
+func getCreateTransactionsValidationMessage(fieldError validator.FieldError) string {
 	switch fieldError.Tag() {
 	case "required":
 		return "This field is required"

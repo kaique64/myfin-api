@@ -1,6 +1,6 @@
 package dtos
 
-type CreateCashHandlingEntryDTO struct {
+type CreateTransactionsEntryDTO struct {
 	Amount        float64 `json:"amount" binding:"required,gt=0"`
 	Title         string  `json:"title" binding:"required"`
 	Currency      string  `json:"currency" binding:"required,len=3"`

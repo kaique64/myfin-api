@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 )
 
-func TestCashHandlingEntryRepositoryCreate(t *testing.T) {
+func TestTransactionsEntryRepositoryCreate(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
@@ -27,9 +27,9 @@ func TestCashHandlingEntryRepositoryCreate(t *testing.T) {
 			bson.E{Key: "id", Value: objectID},
 		))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
-		entry := &model.CashHandlingEntryModel{
+		entry := &model.TransactionsEntryModel{
 			Amount:      100.0,
 			Description: "Test entry",
 		}
@@ -50,10 +50,10 @@ func TestCashHandlingEntryRepositoryCreate(t *testing.T) {
 			bson.E{Key: "n", Value: 1},
 		))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		customTimestamp := int64(1234567890)
-		entry := &model.CashHandlingEntryModel{
+		entry := &model.TransactionsEntryModel{
 			Amount:      200.0,
 			Description: "Test entry with timestamp",
 			Timestamp:   customTimestamp,
@@ -74,9 +74,9 @@ func TestCashHandlingEntryRepositoryCreate(t *testing.T) {
 			Message: "duplicate key error",
 		}))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
-		entry := &model.CashHandlingEntryModel{
+		entry := &model.TransactionsEntryModel{
 			Amount:      300.0,
 			Description: "Test entry that will fail",
 		}
@@ -88,7 +88,7 @@ func TestCashHandlingEntryRepositoryCreate(t *testing.T) {
 	})
 }
 
-func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
+func TestTransactionsEntryRepositoryGetAll(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
@@ -96,7 +96,7 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 		objectID1 := primitive.NewObjectID()
 		objectID2 := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID1},
 			{"amount", 150.75},
 			{"title", "Lunch at restaurant"},
@@ -111,7 +111,7 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 			{"updated_at", time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)},
 		})
 
-		second := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.NextBatch, bson.D{
+		second := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.NextBatch, bson.D{
 			{"_id", objectID2},
 			{"amount", 2500.0},
 			{"title", "Monthly salary"},
@@ -126,11 +126,11 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 			{"updated_at", time.Date(2025, 8, 30, 9, 0, 0, 0, time.UTC)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, second, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetAll(0, 0)
 
@@ -155,7 +155,7 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 	mt.Run("with_limit_and_skip", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID},
 			{"amount", 89.99},
 			{"title", "Lunch at restaurant"},
@@ -170,11 +170,11 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 			{"updated_at", time.Date(2025, 8, 28, 20, 15, 0, 0, time.UTC)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetAll(1, 5)
 
@@ -192,7 +192,7 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 			Message: "BadValue",
 		}))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetAll(10, 0)
 
@@ -201,16 +201,16 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 		assert.Contains(t, err.Error(), "BadValue")
 	})
 	mt.Run("cursor_decode_error", func(mt *mtest.T) {
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", "invalid_object_id"},
 			{"amount", "invalid_amount"},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetAll(10, 0)
 
@@ -220,7 +220,7 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 	mt.Run("only_limit_parameter", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID},
 			{"amount", 45.90},
 			{"title", "Lunch at restaurant"},
@@ -233,11 +233,11 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 			{"timestamp", int64(1724954700)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetAll(5, 0)
 
@@ -250,7 +250,7 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 	mt.Run("only_skip_parameter", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID},
 			{"amount", 320.50},
 			{"title", "Lunch at restaurant"},
@@ -263,11 +263,11 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 			{"timestamp", int64(1724765320)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetAll(0, 3)
 
@@ -280,7 +280,7 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 	mt.Run("negative_parameters", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID},
 			{"title", "Lunch at restaurant"},
 			{"amount", 100.0},
@@ -288,11 +288,11 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 			{"type", "income"},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetAll(-5, -10)
 
@@ -302,13 +302,13 @@ func TestCashHandlingEntryRepositoryGetAll(t *testing.T) {
 	})
 }
 
-func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
+func TestTransactionsRepositoryGetAllWithFilter(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 	mt.Run("filter_by_title_only", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{Key: "_id", Value: objectID},
 			{Key: "amount", Value: 50.0},
 			{Key: "title", Value: "Coffee Shop Visit"},
@@ -323,11 +323,11 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			{Key: "updated_at", Value: time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "coffee",
@@ -347,7 +347,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	mt.Run("filter_by_category_only", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{Key: "_id", Value: objectID},
 			{Key: "amount", Value: 25.0},
 			{Key: "title", Value: "Bus Ticket"},
@@ -360,11 +360,11 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			{Key: "timestamp", Value: int64(1725717000)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "", // Empty title
@@ -383,7 +383,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 		objectID1 := primitive.NewObjectID()
 		objectID2 := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID1},
 			{"amount", 120.0},
 			{"title", "Lunch at Restaurant"},
@@ -395,7 +395,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			{"date", time.Date(2025, 9, 7, 12, 0, 0, 0, time.UTC)},
 		})
 
-		second := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.NextBatch, bson.D{
+		second := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.NextBatch, bson.D{
 			{"_id", objectID2},
 			{"amount", 35.0},
 			{"title", "Quick lunch"},
@@ -407,11 +407,11 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			{"date", time.Date(2025, 9, 6, 13, 0, 0, 0, time.UTC)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, second, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "lunch",
@@ -433,18 +433,18 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	mt.Run("no_filters_empty_strings", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID},
 			{"amount", 200.0},
 			{"title", "Any Title"},
 			{"category", "any_category"},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "", // Empty filters should return all entries
@@ -461,18 +461,18 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	mt.Run("zero_and_negative_params_with_filter", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID},
 			{"amount", 150.0},
 			{"title", "Test Entry"},
 			{"category", "test"},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "test",
@@ -492,7 +492,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			Message: "BadValue in filter query",
 		}))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "test",
@@ -509,7 +509,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	mt.Run("cursor_iteration_error_with_filters", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{Key: "_id", Value: objectID},
 			{Key: "amount", Value: 100.0},
 			{Key: "title", Value: "Test Entry"},
@@ -520,11 +520,11 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			{Key: "date", Value: time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)},
 		})
 
-		cursorError := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		cursorError := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, cursorError)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "test",
@@ -545,7 +545,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	mt.Run("comprehensive_coverage_test", func(mt *mtest.T) {
 		objectID := primitive.NewObjectID()
 
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", objectID},
 			{"amount", 75.0},
 			{"title", "Complete Test"},
@@ -556,11 +556,11 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 			{"date", time.Date(2025, 9, 7, 15, 0, 0, 0, time.UTC)},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "Complete",
@@ -576,17 +576,17 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	})
 
 	mt.Run("cursor_decode_error_with_filter", func(mt *mtest.T) {
-		first := mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{"_id", "invalid-object-id"},
 			{"amount", "invalid-amount"},
 			{"title", 123},
 		})
 
-		killCursors := mtest.CreateCursorResponse(0, "cash_handling_entries.entries", mtest.NextBatch)
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
 
 		mt.AddMockResponses(first, killCursors)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		filter := types.FilterOptions{
 			Title:    "test",
@@ -600,7 +600,7 @@ func TestCashHandlingRepositoryGetAllWithFilter(t *testing.T) {
 	})
 }
 
-func TestCashHandlingRepositoryDelete(t *testing.T) {
+func TestTransactionsRepositoryDelete(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
@@ -613,7 +613,7 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 			bson.E{Key: "deletedCount", Value: 1},
 		))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		err := repo.Delete(objectID.Hex())
 
@@ -621,7 +621,7 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 	})
 
 	mt.Run("invalid_object_id", func(mt *mtest.T) {
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		err := repo.Delete("invalid-id")
 
@@ -638,7 +638,7 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 			bson.E{Key: "deletedCount", Value: 0},
 		))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		err := repo.Delete(objectID.Hex())
 
@@ -653,7 +653,7 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 			Message: "Database error",
 		}))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		err := repo.Delete(objectID.Hex())
 
@@ -662,7 +662,7 @@ func TestCashHandlingRepositoryDelete(t *testing.T) {
 	})
 }
 
-func TestCashHandlingRepositoryGetByID(t *testing.T) {
+func TestTransactionsRepositoryGetByID(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
@@ -670,7 +670,7 @@ func TestCashHandlingRepositoryGetByID(t *testing.T) {
 		objectID := primitive.NewObjectID()
 		createdTime := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
 
-		mt.AddMockResponses(mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+		mt.AddMockResponses(mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 			{Key: "_id", Value: objectID},
 			{Key: "amount", Value: 150.75},
 			{Key: "title", Value: "Lunch at restaurant"},
@@ -685,7 +685,7 @@ func TestCashHandlingRepositoryGetByID(t *testing.T) {
 			{Key: "updated_at", Value: createdTime},
 		}))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetByID(objectID.Hex())
 
@@ -706,7 +706,7 @@ func TestCashHandlingRepositoryGetByID(t *testing.T) {
 	})
 
 	mt.Run("invalid_object_id", func(mt *mtest.T) {
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetByID("invalid-id")
 
@@ -723,7 +723,7 @@ func TestCashHandlingRepositoryGetByID(t *testing.T) {
 			Message: "Database error",
 		}))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		result, err := repo.GetByID(objectID.Hex())
 
@@ -733,7 +733,7 @@ func TestCashHandlingRepositoryGetByID(t *testing.T) {
 	})
 }
 
-func TestCashHandlingRepositoryUpdate(t *testing.T) {
+func TestTransactionsRepositoryUpdate(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
@@ -750,7 +750,7 @@ func TestCashHandlingRepositoryUpdate(t *testing.T) {
 				bson.E{Key: "nModified", Value: 1},
 			),
 
-			mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+			mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 				{Key: "_id", Value: objectID},
 				{Key: "amount", Value: 200.50},
 				{Key: "title", Value: "Updated Title"},
@@ -766,9 +766,9 @@ func TestCashHandlingRepositoryUpdate(t *testing.T) {
 			}),
 		)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
-		updateEntry := &model.CashHandlingEntryModel{
+		updateEntry := &model.TransactionsEntryModel{
 			Amount:        200.50,
 			Title:         "Updated Title",
 			Currency:      "USD",
@@ -801,9 +801,9 @@ func TestCashHandlingRepositoryUpdate(t *testing.T) {
 	})
 
 	mt.Run("invalid_object_id", func(mt *mtest.T) {
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
-		updateEntry := &model.CashHandlingEntryModel{
+		updateEntry := &model.TransactionsEntryModel{
 			Amount:   100.0,
 			Title:    "Test Entry",
 			Date:     time.Now(),
@@ -826,9 +826,9 @@ func TestCashHandlingRepositoryUpdate(t *testing.T) {
 			Message: "Update error",
 		}))
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
-		updateEntry := &model.CashHandlingEntryModel{
+		updateEntry := &model.TransactionsEntryModel{
 			Amount:   100.0,
 			Title:    "Test Entry",
 			Date:     time.Now(),
@@ -860,9 +860,9 @@ func TestCashHandlingRepositoryUpdate(t *testing.T) {
 			}),
 		)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
-		updateEntry := &model.CashHandlingEntryModel{
+		updateEntry := &model.TransactionsEntryModel{
 			Amount:   100.0,
 			Title:    "Test Entry",
 			Date:     time.Now(),
@@ -889,7 +889,7 @@ func TestCashHandlingRepositoryUpdate(t *testing.T) {
 				bson.E{Key: "nModified", Value: 1},
 			),
 
-			mtest.CreateCursorResponse(1, "cash_handling_entries.entries", mtest.FirstBatch, bson.D{
+			mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
 				{Key: "_id", Value: objectID},
 				{Key: "amount", Value: 75.0},
 				{Key: "title", Value: "Test Entry"},
@@ -900,10 +900,10 @@ func TestCashHandlingRepositoryUpdate(t *testing.T) {
 			}),
 		)
 
-		repo := repository.NewCashHandlingEntryRepository(mt.DB)
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
 
 		differentID := primitive.NewObjectID()
-		updateEntry := &model.CashHandlingEntryModel{
+		updateEntry := &model.TransactionsEntryModel{
 			ID:     differentID, // This should be ignored and overwritten with the ID from the parameter
 			Amount: 75.0,
 			Title:  "Test Entry",

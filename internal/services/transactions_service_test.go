@@ -14,90 +14,90 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type MockCashHandlingRepository struct {
+type MockTransactionsRepository struct {
 	mock.Mock
 }
 
-func (m *MockCashHandlingRepository) Create(entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error) {
+func (m *MockTransactionsRepository) Create(entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error) {
 	args := m.Called(entry)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*model.CashHandlingEntryModel), args.Error(1)
+	return args.Get(0).(*model.TransactionsEntryModel), args.Error(1)
 }
 
-func (m *MockCashHandlingRepository) GetAll(limit, skip int) ([]*model.CashHandlingEntryModel, error) {
+func (m *MockTransactionsRepository) GetAll(limit, skip int) ([]*model.TransactionsEntryModel, error) {
 	args := m.Called(limit, skip)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*model.CashHandlingEntryModel), args.Error(1)
+	return args.Get(0).([]*model.TransactionsEntryModel), args.Error(1)
 }
 
-func (m *MockCashHandlingRepository) GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.CashHandlingEntryModel, error) {
+func (m *MockTransactionsRepository) GetAllWithFilter(limit, skip int, filter types.FilterOptions) ([]*model.TransactionsEntryModel, error) {
 	args := m.Called(limit, skip, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*model.CashHandlingEntryModel), args.Error(1)
+	return args.Get(0).([]*model.TransactionsEntryModel), args.Error(1)
 }
 
-func (m *MockCashHandlingRepository) Delete(id string) error {
+func (m *MockTransactionsRepository) Delete(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-func (m *MockCashHandlingRepository) GetByID(id string) (*model.CashHandlingEntryModel, error) {
+func (m *MockTransactionsRepository) GetByID(id string) (*model.TransactionsEntryModel, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*model.CashHandlingEntryModel), args.Error(1)
+	return args.Get(0).(*model.TransactionsEntryModel), args.Error(1)
 }
 
-func (m *MockCashHandlingRepository) Update(id string, entry *model.CashHandlingEntryModel) (*model.CashHandlingEntryModel, error) {
+func (m *MockTransactionsRepository) Update(id string, entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error) {
 	args := m.Called(id, entry)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*model.CashHandlingEntryModel), args.Error(1)
+	return args.Get(0).(*model.TransactionsEntryModel), args.Error(1)
 }
 
-func TestCashHandlingServiceDeleteCashHandlingEntrySuccess(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceDeleteTransactionsEntrySuccess(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 
 	mockRepo.On("Delete", objectID.Hex()).Return(nil)
 
-	err := service.DeleteCashHandlingEntry(objectID.Hex())
+	err := service.DeleteTransactionsEntry(objectID.Hex())
 
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceDeleteCashHandlingEntryRepositoryError(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceDeleteTransactionsEntryRepositoryError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 
 	expectedError := errors.New("database error")
 	mockRepo.On("Delete", objectID.Hex()).Return(expectedError)
 
-	err := service.DeleteCashHandlingEntry(objectID.Hex())
+	err := service.DeleteTransactionsEntry(objectID.Hex())
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceCreateCashHandlingEntrySuccess(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceCreateTransactionsEntrySuccess(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
-	inputDTO := dtos.CreateCashHandlingEntryDTO{
+	inputDTO := dtos.CreateTransactionsEntryDTO{
 		Amount:        150.75,
 		Title:         "Lunch at restaurant",
 		Currency:      "BRL",
@@ -112,7 +112,7 @@ func TestCashHandlingServiceCreateCashHandlingEntrySuccess(t *testing.T) {
 	objectID := primitive.NewObjectID()
 	createdTime := time.Now().UTC()
 
-	expectedModel := &model.CashHandlingEntryModel{
+	expectedModel := &model.TransactionsEntryModel{
 		ID:            objectID,
 		Amount:        150.75,
 		Title:         "Lunch at restaurant",
@@ -127,9 +127,9 @@ func TestCashHandlingServiceCreateCashHandlingEntrySuccess(t *testing.T) {
 		UpdatedAt:     createdTime,
 	}
 
-	mockRepo.On("Create", mock.AnythingOfType("*model.CashHandlingEntryModel")).Return(expectedModel, nil)
+	mockRepo.On("Create", mock.AnythingOfType("*model.TransactionsEntryModel")).Return(expectedModel, nil)
 
-	result, err := service.CreateCashHandlingEntry(inputDTO)
+	result, err := service.CreateTransactionsEntry(inputDTO)
 
 	assert.NoError(t, err)
 	assert.Equal(t, objectID.Hex(), result.ID)
@@ -148,11 +148,11 @@ func TestCashHandlingServiceCreateCashHandlingEntrySuccess(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceCreateCashHandlingEntryInvalidDate(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceCreateTransactionsEntryInvalidDate(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
-	inputDTO := dtos.CreateCashHandlingEntryDTO{
+	inputDTO := dtos.CreateTransactionsEntryDTO{
 		Amount:        150.75,
 		Title:         "Lunch at restaurant",
 		Currency:      "BRL",
@@ -163,19 +163,19 @@ func TestCashHandlingServiceCreateCashHandlingEntryInvalidDate(t *testing.T) {
 		Date:          "invalid-date",
 	}
 
-	result, err := service.CreateCashHandlingEntry(inputDTO)
+	result, err := service.CreateTransactionsEntry(inputDTO)
 
 	assert.Error(t, err)
-	assert.Equal(t, dtos.CashHandlingEntryResponseDTO{}, result)
+	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
 
 	mockRepo.AssertNotCalled(t, "Create")
 }
 
-func TestCashHandlingServiceCreateCashHandlingEntryRepositoryError(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceCreateTransactionsEntryRepositoryError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
-	inputDTO := dtos.CreateCashHandlingEntryDTO{
+	inputDTO := dtos.CreateTransactionsEntryDTO{
 		Amount:        150.75,
 		Title:         "Lunch at restaurant",
 		Currency:      "BRL",
@@ -187,27 +187,27 @@ func TestCashHandlingServiceCreateCashHandlingEntryRepositoryError(t *testing.T)
 	}
 
 	expectedError := errors.New("database connection failed")
-	mockRepo.On("Create", mock.AnythingOfType("*model.CashHandlingEntryModel")).Return(nil, expectedError)
+	mockRepo.On("Create", mock.AnythingOfType("*model.TransactionsEntryModel")).Return(nil, expectedError)
 
-	result, err := service.CreateCashHandlingEntry(inputDTO)
+	result, err := service.CreateTransactionsEntry(inputDTO)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
-	assert.Equal(t, dtos.CashHandlingEntryResponseDTO{}, result)
+	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
 
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllCashHandlingEntriesSuccess(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllTransactionsEntriesSuccess(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID1 := primitive.NewObjectID()
 	objectID2 := primitive.NewObjectID()
 	createdTime1 := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
 	createdTime2 := time.Date(2025, 8, 30, 9, 0, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID1,
 			Amount:        150.75,
@@ -240,7 +240,7 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesSuccess(t *testing.T) {
 
 	mockRepo.On("GetAll", 10, 0).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "", "")
+	result, err := service.GetAllTransactionsEntries(10, 0, "", "")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
@@ -266,13 +266,13 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesSuccess(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllCashHandlingEntriesEmptyResult(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllTransactionsEntriesEmptyResult(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
-	mockRepo.On("GetAll", 10, 0).Return([]*model.CashHandlingEntryModel{}, nil)
+	mockRepo.On("GetAll", 10, 0).Return([]*model.TransactionsEntryModel{}, nil)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "", "")
+	result, err := service.GetAllTransactionsEntries(10, 0, "", "")
 
 	assert.NoError(t, err)
 	assert.Empty(t, result)
@@ -280,14 +280,14 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesEmptyResult(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllCashHandlingEntriesRepositoryError(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllTransactionsEntriesRepositoryError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	expectedError := errors.New("database connection failed")
 	mockRepo.On("GetAll", 5, 10).Return(nil, expectedError)
 
-	_, err := service.GetAllCashHandlingEntries(5, 10, "", "")
+	_, err := service.GetAllTransactionsEntries(5, 10, "", "")
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
@@ -295,14 +295,14 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesRepositoryError(t *testing.
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllCashHandlingEntriesWithPagination(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllTransactionsEntriesWithPagination(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 8, 28, 20, 15, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID,
 			Amount:        89.99,
@@ -320,7 +320,7 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesWithPagination(t *testing.T
 
 	mockRepo.On("GetAll", 1, 5).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(1, 5, "", "")
+	result, err := service.GetAllTransactionsEntries(1, 5, "", "")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -331,14 +331,14 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesWithPagination(t *testing.T
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllCashHandlingEntriesNoPagination(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllTransactionsEntriesNoPagination(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 8, 27, 14, 22, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID,
 			Amount:        320.50,
@@ -357,7 +357,7 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesNoPagination(t *testing.T) 
 
 	mockRepo.On("GetAll", 0, 0).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(0, 0, "", "")
+	result, err := service.GetAllTransactionsEntries(0, 0, "", "")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -367,15 +367,15 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesNoPagination(t *testing.T) 
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllCashHandlingEntriesDateFormatting(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllTransactionsEntriesDateFormatting(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 
 	testDate := time.Date(2025, 3, 15, 10, 30, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID,
 			Amount:        100.0,
@@ -394,7 +394,7 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesDateFormatting(t *testing.T
 
 	mockRepo.On("GetAll", 10, 0).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "", "")
+	result, err := service.GetAllTransactionsEntries(10, 0, "", "")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -407,13 +407,13 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesDateFormatting(t *testing.T
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllCashHandlingEntriesNilEntries(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllTransactionsEntriesNilEntries(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	mockRepo.On("GetAll", 10, 0).Return(nil, nil)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "", "")
+	result, err := service.GetAllTransactionsEntries(10, 0, "", "")
 
 	assert.NoError(t, err)
 	assert.Empty(t, result)
@@ -421,7 +421,7 @@ func TestCashHandlingServiceGetAllCashHandlingEntriesNilEntries(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllParameterValidation(t *testing.T) {
+func TestTransactionsServiceGetAllParameterValidation(t *testing.T) {
 	testCases := []struct {
 		name          string
 		inputLimit    int
@@ -490,13 +490,13 @@ func TestCashHandlingServiceGetAllParameterValidation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepo := new(MockCashHandlingRepository)
-			service := NewCashHandlingService(mockRepo)
+			mockRepo := new(MockTransactionsRepository)
+			service := NewTransactionsService(mockRepo)
 
 			objectID := primitive.NewObjectID()
 			createdTime := time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)
 
-			mockEntries := []*model.CashHandlingEntryModel{
+			mockEntries := []*model.TransactionsEntryModel{
 				{
 					ID:            objectID,
 					Amount:        100.0,
@@ -515,7 +515,7 @@ func TestCashHandlingServiceGetAllParameterValidation(t *testing.T) {
 
 			mockRepo.On("GetAll", tc.expectedLimit, tc.expectedSkip).Return(mockEntries, nil)
 
-			result, err := service.GetAllCashHandlingEntries(tc.inputLimit, tc.inputSkip, "", "")
+			result, err := service.GetAllTransactionsEntries(tc.inputLimit, tc.inputSkip, "", "")
 
 			assert.NoError(t, err, tc.description)
 			assert.Len(t, result, 1, tc.description)
@@ -526,14 +526,14 @@ func TestCashHandlingServiceGetAllParameterValidation(t *testing.T) {
 	}
 }
 
-func TestCashHandlingServiceGetAllBoundaryValues(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllBoundaryValues(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Now().UTC()
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID,
 			Amount:        50.0,
@@ -567,7 +567,7 @@ func TestCashHandlingServiceGetAllBoundaryValues(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepo.On("GetAll", tc.expectedLimit, tc.expectedSkip).Return(mockEntries, nil).Once()
 
-			result, err := service.GetAllCashHandlingEntries(tc.limit, tc.skip, "", "")
+			result, err := service.GetAllTransactionsEntries(tc.limit, tc.skip, "", "")
 
 			assert.NoError(t, err)
 			assert.Len(t, result, 1)
@@ -577,15 +577,15 @@ func TestCashHandlingServiceGetAllBoundaryValues(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceParameterValidationWithError(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceParameterValidationWithError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	expectedError := errors.New("repository error after parameter validation")
 
 	mockRepo.On("GetAll", 10, 0).Return(nil, expectedError)
 
-	result, err := service.GetAllCashHandlingEntries(-10, -5, "", "")
+	result, err := service.GetAllTransactionsEntries(-10, -5, "", "")
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
@@ -594,15 +594,15 @@ func TestCashHandlingServiceParameterValidationWithError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllWithFilter(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllWithFilter(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID1 := primitive.NewObjectID()
 	objectID2 := primitive.NewObjectID()
 	createdTime := time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID1,
 			Amount:        150.75,
@@ -640,7 +640,7 @@ func TestCashHandlingServiceGetAllWithFilter(t *testing.T) {
 
 	mockRepo.On("GetAllWithFilter", 10, 0, expectedFilter).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "lunch", "food")
+	result, err := service.GetAllTransactionsEntries(10, 0, "lunch", "food")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
@@ -656,14 +656,14 @@ func TestCashHandlingServiceGetAllWithFilter(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllWithFilterTitleOnly(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllWithFilterTitleOnly(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID,
 			Amount:        100.0,
@@ -687,7 +687,7 @@ func TestCashHandlingServiceGetAllWithFilterTitleOnly(t *testing.T) {
 
 	mockRepo.On("GetAllWithFilter", 5, 2, expectedFilter).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(5, 2, "coffee", "")
+	result, err := service.GetAllTransactionsEntries(5, 2, "coffee", "")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -696,14 +696,14 @@ func TestCashHandlingServiceGetAllWithFilterTitleOnly(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllWithFilterCategoryOnly(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllWithFilterCategoryOnly(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID,
 			Amount:        50.0,
@@ -727,7 +727,7 @@ func TestCashHandlingServiceGetAllWithFilterCategoryOnly(t *testing.T) {
 
 	mockRepo.On("GetAllWithFilter", 10, 0, expectedFilter).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "", "transport")
+	result, err := service.GetAllTransactionsEntries(10, 0, "", "transport")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -736,14 +736,14 @@ func TestCashHandlingServiceGetAllWithFilterCategoryOnly(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllWithFilterParameterValidation(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllWithFilterParameterValidation(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 9, 7, 10, 0, 0, 0, time.UTC)
 
-	mockEntries := []*model.CashHandlingEntryModel{
+	mockEntries := []*model.TransactionsEntryModel{
 		{
 			ID:            objectID,
 			Amount:        200.0,
@@ -767,7 +767,7 @@ func TestCashHandlingServiceGetAllWithFilterParameterValidation(t *testing.T) {
 
 	mockRepo.On("GetAllWithFilter", 10, 0, expectedFilter).Return(mockEntries, nil)
 
-	result, err := service.GetAllCashHandlingEntries(-5, -3, "test", "salary")
+	result, err := service.GetAllTransactionsEntries(-5, -3, "test", "salary")
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -775,9 +775,9 @@ func TestCashHandlingServiceGetAllWithFilterParameterValidation(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllWithFilterRepositoryError(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllWithFilterRepositoryError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	expectedError := errors.New("database filter query failed")
 	expectedFilter := types.FilterOptions{
@@ -787,7 +787,7 @@ func TestCashHandlingServiceGetAllWithFilterRepositoryError(t *testing.T) {
 
 	mockRepo.On("GetAllWithFilter", 10, 0, expectedFilter).Return(nil, expectedError)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "error", "test")
+	result, err := service.GetAllTransactionsEntries(10, 0, "error", "test")
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
@@ -796,18 +796,18 @@ func TestCashHandlingServiceGetAllWithFilterRepositoryError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetAllWithFilterEmptyResult(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetAllWithFilterEmptyResult(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	expectedFilter := types.FilterOptions{
 		Title:    "nonexistent",
 		Category: "unknown",
 	}
 
-	mockRepo.On("GetAllWithFilter", 10, 0, expectedFilter).Return([]*model.CashHandlingEntryModel{}, nil)
+	mockRepo.On("GetAllWithFilter", 10, 0, expectedFilter).Return([]*model.TransactionsEntryModel{}, nil)
 
-	result, err := service.GetAllCashHandlingEntries(10, 0, "nonexistent", "unknown")
+	result, err := service.GetAllTransactionsEntries(10, 0, "nonexistent", "unknown")
 
 	assert.NoError(t, err)
 	assert.Empty(t, result)
@@ -816,15 +816,15 @@ func TestCashHandlingServiceGetAllWithFilterEmptyResult(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceUpdateCashHandlingEntrySuccess(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceUpdateTransactionsEntrySuccess(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
 	updatedTime := time.Now().UTC()
 
-	existingEntry := &model.CashHandlingEntryModel{
+	existingEntry := &model.TransactionsEntryModel{
 		ID:            objectID,
 		Amount:        150.75,
 		Title:         "Old Title",
@@ -839,7 +839,7 @@ func TestCashHandlingServiceUpdateCashHandlingEntrySuccess(t *testing.T) {
 		UpdatedAt:     createdTime,
 	}
 
-	updatedEntry := &model.CashHandlingEntryModel{
+	updatedEntry := &model.TransactionsEntryModel{
 		ID:            objectID,
 		Amount:        200.50,
 		Title:         "Updated Title",
@@ -854,7 +854,7 @@ func TestCashHandlingServiceUpdateCashHandlingEntrySuccess(t *testing.T) {
 		UpdatedAt:     updatedTime,        // UpdatedAt should be updated
 	}
 
-	updateDTO := dtos.UpdateCashHandlingEntryDTO{
+	updateDTO := dtos.UpdateTransactionsEntryDTO{
 		Amount:        200.50,
 		Title:         "Updated Title",
 		Currency:      "USD",
@@ -866,9 +866,9 @@ func TestCashHandlingServiceUpdateCashHandlingEntrySuccess(t *testing.T) {
 	}
 
 	mockRepo.On("GetByID", objectID.Hex()).Return(existingEntry, nil)
-	mockRepo.On("Update", objectID.Hex(), mock.AnythingOfType("*model.CashHandlingEntryModel")).Return(updatedEntry, nil)
+	mockRepo.On("Update", objectID.Hex(), mock.AnythingOfType("*model.TransactionsEntryModel")).Return(updatedEntry, nil)
 
-	result, err := service.UpdateCashHandlingEntry(objectID.Hex(), updateDTO)
+	result, err := service.UpdateTransactionsEntry(objectID.Hex(), updateDTO)
 
 	assert.NoError(t, err)
 	assert.Equal(t, objectID.Hex(), result.ID)
@@ -887,13 +887,13 @@ func TestCashHandlingServiceUpdateCashHandlingEntrySuccess(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceUpdateCashHandlingEntryInvalidDate(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceUpdateTransactionsEntryInvalidDate(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 
-	updateDTO := dtos.UpdateCashHandlingEntryDTO{
+	updateDTO := dtos.UpdateTransactionsEntryDTO{
 		Amount:        200.50,
 		Title:         "Updated Title",
 		Currency:      "USD",
@@ -904,23 +904,23 @@ func TestCashHandlingServiceUpdateCashHandlingEntryInvalidDate(t *testing.T) {
 		Date:          "invalid-date", // Invalid date format
 	}
 
-	result, err := service.UpdateCashHandlingEntry(objectID.Hex(), updateDTO)
+	result, err := service.UpdateTransactionsEntry(objectID.Hex(), updateDTO)
 
 	assert.Error(t, err)
-	assert.Equal(t, dtos.CashHandlingEntryResponseDTO{}, result)
+	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
 
 	mockRepo.AssertNotCalled(t, "GetByID")
 	mockRepo.AssertNotCalled(t, "Update")
 }
 
-func TestCashHandlingServiceUpdateCashHandlingEntryGetByIDError(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceUpdateTransactionsEntryGetByIDError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	expectedError := errors.New("entry not found")
 
-	updateDTO := dtos.UpdateCashHandlingEntryDTO{
+	updateDTO := dtos.UpdateTransactionsEntryDTO{
 		Amount:        200.50,
 		Title:         "Updated Title",
 		Currency:      "USD",
@@ -933,24 +933,24 @@ func TestCashHandlingServiceUpdateCashHandlingEntryGetByIDError(t *testing.T) {
 
 	mockRepo.On("GetByID", objectID.Hex()).Return(nil, expectedError)
 
-	result, err := service.UpdateCashHandlingEntry(objectID.Hex(), updateDTO)
+	result, err := service.UpdateTransactionsEntry(objectID.Hex(), updateDTO)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
-	assert.Equal(t, dtos.CashHandlingEntryResponseDTO{}, result)
+	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
 
 	mockRepo.AssertNotCalled(t, "Update")
 }
 
-func TestCashHandlingServiceUpdateCashHandlingEntryUpdateError(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceUpdateTransactionsEntryUpdateError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
 	expectedError := errors.New("database update error")
 
-	existingEntry := &model.CashHandlingEntryModel{
+	existingEntry := &model.TransactionsEntryModel{
 		ID:            objectID,
 		Amount:        150.75,
 		Title:         "Old Title",
@@ -965,7 +965,7 @@ func TestCashHandlingServiceUpdateCashHandlingEntryUpdateError(t *testing.T) {
 		UpdatedAt:     createdTime,
 	}
 
-	updateDTO := dtos.UpdateCashHandlingEntryDTO{
+	updateDTO := dtos.UpdateTransactionsEntryDTO{
 		Amount:        200.50,
 		Title:         "Updated Title",
 		Currency:      "USD",
@@ -977,25 +977,25 @@ func TestCashHandlingServiceUpdateCashHandlingEntryUpdateError(t *testing.T) {
 	}
 
 	mockRepo.On("GetByID", objectID.Hex()).Return(existingEntry, nil)
-	mockRepo.On("Update", objectID.Hex(), mock.AnythingOfType("*model.CashHandlingEntryModel")).Return(nil, expectedError)
+	mockRepo.On("Update", objectID.Hex(), mock.AnythingOfType("*model.TransactionsEntryModel")).Return(nil, expectedError)
 
-	result, err := service.UpdateCashHandlingEntry(objectID.Hex(), updateDTO)
+	result, err := service.UpdateTransactionsEntry(objectID.Hex(), updateDTO)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
-	assert.Equal(t, dtos.CashHandlingEntryResponseDTO{}, result)
+	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
 
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetCashHandlingEntryByIDSuccess(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetTransactionsEntryByIDSuccess(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	createdTime := time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)
 
-	mockEntry := &model.CashHandlingEntryModel{
+	mockEntry := &model.TransactionsEntryModel{
 		ID:            objectID,
 		Amount:        150.75,
 		Title:         "Lunch at restaurant",
@@ -1012,7 +1012,7 @@ func TestCashHandlingServiceGetCashHandlingEntryByIDSuccess(t *testing.T) {
 
 	mockRepo.On("GetByID", objectID.Hex()).Return(mockEntry, nil)
 
-	result, err := service.GetCashHandlingEntryByID(objectID.Hex())
+	result, err := service.GetTransactionsEntryByID(objectID.Hex())
 
 	assert.NoError(t, err)
 	assert.Equal(t, objectID.Hex(), result.ID)
@@ -1031,38 +1031,38 @@ func TestCashHandlingServiceGetCashHandlingEntryByIDSuccess(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetCashHandlingEntryByIDNotFound(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetTransactionsEntryByIDNotFound(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	objectID := primitive.NewObjectID()
 	expectedError := errors.New("entry not found")
 
 	mockRepo.On("GetByID", objectID.Hex()).Return(nil, expectedError)
 
-	result, err := service.GetCashHandlingEntryByID(objectID.Hex())
+	result, err := service.GetTransactionsEntryByID(objectID.Hex())
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
-	assert.Equal(t, dtos.CashHandlingEntryResponseDTO{}, result)
+	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
 
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCashHandlingServiceGetCashHandlingEntryByIDInvalidID(t *testing.T) {
-	mockRepo := new(MockCashHandlingRepository)
-	service := NewCashHandlingService(mockRepo)
+func TestTransactionsServiceGetTransactionsEntryByIDInvalidID(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
 
 	invalidID := "invalid-id"
 	expectedError := errors.New("invalid ID format")
 
 	mockRepo.On("GetByID", invalidID).Return(nil, expectedError)
 
-	result, err := service.GetCashHandlingEntryByID(invalidID)
+	result, err := service.GetTransactionsEntryByID(invalidID)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
-	assert.Equal(t, dtos.CashHandlingEntryResponseDTO{}, result)
+	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
 
 	mockRepo.AssertExpectations(t)
 }
