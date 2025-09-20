@@ -7,6 +7,6 @@ type CreateTransactionsEntryDTO struct {
 	Type          string  `json:"type" binding:"required,oneof=income expense"`
 	Category      string  `json:"category" binding:"required,min=1"`
 	PaymentMethod string  `json:"paymentMethod" binding:"required,min=1"`
-	Description   string  `json:"description" binding:"min=1"`
+	Description   string  `json:"description" binding:"omitempty"`
 	Date          string  `json:"date" binding:"required,datetime=02/01/2006"`
 }

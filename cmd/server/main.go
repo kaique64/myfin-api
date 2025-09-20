@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"myfin-api/internal/config"
 	"myfin-api/internal/db"
@@ -11,6 +12,7 @@ import (
 	"myfin-api/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 )
 
 const transactionsPath = "/transactions"
@@ -23,6 +25,16 @@ func main() {
 	db.Connect(cfg)
 
 	r := gin.Default()
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowMethods = []string{"POST", "GET", "PUT", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
+	config.ExposeHeaders = []string{"Content-Length"}
+	config.AllowCredentials = true
+	config.MaxAge = 12 * time.Hour
+
+	r.Use(cors.New(config))
+
 	handler := handlers.NewTransactionsHandler(services.NewTransactionsService(repository.NewTransactionsEntryRepository(db.MongoDatabase)))
 
 	r.GET("/health", func(c *gin.Context) {
