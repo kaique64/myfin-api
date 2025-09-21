@@ -1,16 +1,16 @@
 package dtos
 
 type TransactionsEntryResponseDTO struct {
-	ID            string  `bson:"_id"`
-	Amount        float64 `bson:"amount"`
-	Title         string  `bson:"title"`
-	Currency      string  `bson:"currency"`
-	Type          string  `bson:"type"`
-	Category      string  `bson:"category"`
-	PaymentMethod string  `bson:"paymentMethod"`
-	Description   string  `bson:"description,omitempty"`
-	Date          string  `bson:"date"`
-	Timestamp     int64   `bson:"timestamp"`
-	CreatedAt     string  `bson:"createdAt"`
-	UpdatedAt     string  `bson:"updatedAt"`
+	ID            string  `bson:"_id" json:"id"`
+	Amount        float64 `bson:"amount" json:"amount"`
+	Title         string  `bson:"title" json:"title"`
+	Currency      string  `bson:"currency" json:"currency"`
+	Type          string  `bson:"type" json:"type"`
+	Category      string  `bson:"category" json:"category"`
+	PaymentMethod string  `bson:"paymentMethod" json:"paymentMethod"`
+	Description   string  `bson:"description,omitempty" json:"description,omitempty"`
+	Date          string  `bson:"date" json:"date"`
+	Timestamp     int64   `bson:"timestamp" json:"timestamp"`
+	CreatedAt     string  `bson:"createdAt" json:"createdAt"`
+	UpdatedAt     string  `bson:"updatedAt" json:"updatedAt"`
 }

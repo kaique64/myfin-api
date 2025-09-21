@@ -11,8 +11,8 @@ import (
 	"myfin-api/internal/repository"
 	"myfin-api/internal/services"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 const transactionsPath = "/transactions"
@@ -27,7 +27,7 @@ func main() {
 	r := gin.Default()
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
-	config.AllowMethods = []string{"POST", "GET", "PUT", "OPTIONS"}
+	config.AllowMethods = []string{"POST", "GET", "PUT", "OPTIONS", "DELETE"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
 	config.ExposeHeaders = []string{"Content-Length"}
 	config.AllowCredentials = true
