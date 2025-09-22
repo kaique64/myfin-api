@@ -1,0 +1,81 @@
+### 
+
+# @name getTransactions
+
+GET http://localhost:8080/transactions HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+
+### 
+
+# @name createTransaction
+
+POST http://localhost:8080/transactions HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Amount": 455,
+  "Category": "Travel",
+  "Currency": "brl",
+  "Date": "21/09/2025",
+  "PaymentMethod": "PIX",
+  "Title": "New shirt",
+  "Type": "expense"
+}
+
+> {%
+  const data = response.body;
+
+  client.global.set("TRANSACTION_ID", data.id)
+%}
+
+
+### 
+
+# @name updateTransaction
+
+< {%
+  const id = client.global.get("TRANSACTION_ID")
+  client.global.set("TRANSACTION_ID", id || '')
+%}
+
+PUT http://localhost:8080/transactions/{{TRANSACTION_ID}} HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Amount": 45,
+  "Category": "Travel",
+  "Currency": "brl",
+  "Date": "21/09/2025",
+  "Description": "Some description",
+  "PaymentMethod": "PIX",
+  "Title": "New shirt",
+  "Type": "expense"
+}
+
+> {%
+  const data = response.body.data;
+
+  client.global.set("TRANSACTION_ID", data.id)
+%}
+
+
+### 
+
+# @name getTransactionById
+
+GET http://localhost:8080/transactions/{{TRANSACTION_ID}} HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+
+### 
+
+# @name deleteTransactionById
+
+DELETE http://localhost:8080/transactions/{{TRANSACTION_ID}} HTTP/1.1
+Accept: application/json
+Content-Type: application/json
