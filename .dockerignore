@@ -1,0 +1,30 @@
+# Ignore build artifacts
+bin/
+*.out
+coverage.out
+
+# Ignore development files
+.git/
+.github/
+.gitignore
+*.md
+Makefile
+
+# Ignore Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Ignore test files (optional - remove if you want tests in the image)
+*_test.go
+
+# Ignore environment files (they should be mounted or injected at runtime)
+.env*
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore rest client files
+rest/
