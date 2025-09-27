@@ -1,11 +1,8 @@
 FROM golang:1.22.2 AS build
 
 WORKDIR /app
-COPY go.mod go.sum ./
-
+COPY . /app
 RUN go mod download
-
-COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/server/main.go
 
