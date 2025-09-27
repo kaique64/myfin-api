@@ -17,6 +17,13 @@ build: test
 build-run: build
 	@${build_dir}/server
 
+build-ci: test-verbose
+	@mkdir -p ${build_dir} && \
+		GOOS=linux \
+		GOARCH=amd64 \
+		CGO_ENABLED=0 \
+		go build -o ${build_dir} ${main_package_path}
+
 clean:
 	@echo "Cleaning up..."
 	@rm -rf ${build_dir}
