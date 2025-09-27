@@ -44,6 +44,11 @@ func (m *MockTransactionsService) GetTransactionsEntryByID(id string) (dtos.Tran
 	return args.Get(0).(dtos.TransactionsEntryResponseDTO), args.Error(1)
 }
 
+func (m *MockTransactionsService) GetTransactionDashboardData() (dtos.TransactionDashboardResponseDTO, error) {
+	args := m.Called()
+	return args.Get(0).(dtos.TransactionDashboardResponseDTO), args.Error(1)
+}
+
 func setupRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
@@ -905,6 +910,104 @@ func TestGetByIDHandler(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Failed to retrieve entry", response["error"])
 		assert.Equal(t, expectedError.Error(), response["details"])
+
+		mockService.AssertExpectations(t)
+	})
+}
+
+func TestTransactionsHandlerGetTransactionDashboardData(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
+		router := setupRouter()
+
+		router.GET("/transactions/dashboard", func(c *gin.Context) {
+			handler.GetTransactionDashboardData(c)
+		})
+
+		expectedResponse := dtos.TransactionDashboardResponseDTO{
+			IncomeAmount:  1000.50,
+			ExpenseAmount: 250.75,
+			TotalAmount:   749.75,
+		}
+
+		mockService.On("GetTransactionDashboardData").Return(expectedResponse, nil)
+
+		req, _ := http.NewRequest("GET", "/transactions/dashboard", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response dtos.TransactionDashboardResponseDTO
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedResponse.IncomeAmount, response.IncomeAmount)
+		assert.Equal(t, expectedResponse.ExpenseAmount, response.ExpenseAmount)
+		assert.Equal(t, expectedResponse.TotalAmount, response.TotalAmount)
+
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("service_error", func(t *testing.T) {
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
+		router := setupRouter()
+
+		router.GET("/transactions/dashboard", func(c *gin.Context) {
+			handler.GetTransactionDashboardData(c)
+		})
+
+		expectedError := errors.New("database connection failed")
+		mockService.On("GetTransactionDashboardData").Return(dtos.TransactionDashboardResponseDTO{}, expectedError)
+
+		req, _ := http.NewRequest("GET", "/transactions/dashboard", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+		var response map[string]string
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.Equal(t, "Failed to retrieve dashboard data", response["error"])
+		assert.Equal(t, expectedError.Error(), response["details"])
+
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("empty_dashboard_data", func(t *testing.T) {
+		mockService := new(MockTransactionsService)
+		handler := NewTransactionsHandler(mockService)
+		router := setupRouter()
+
+		router.GET("/transactions/dashboard", func(c *gin.Context) {
+			handler.GetTransactionDashboardData(c)
+		})
+
+		expectedResponse := dtos.TransactionDashboardResponseDTO{
+			IncomeAmount:  0.0,
+			ExpenseAmount: 0.0,
+			TotalAmount:   0.0,
+		}
+
+		mockService.On("GetTransactionDashboardData").Return(expectedResponse, nil)
+
+		req, _ := http.NewRequest("GET", "/transactions/dashboard", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response dtos.TransactionDashboardResponseDTO
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.Equal(t, 0.0, response.IncomeAmount)
+		assert.Equal(t, 0.0, response.ExpenseAmount)
+		assert.Equal(t, 0.0, response.TotalAmount)
 
 		mockService.AssertExpectations(t)
 	})

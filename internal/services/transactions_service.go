@@ -1,6 +1,7 @@
 package services
 
 import (
+	"math"
 	"time"
 
 	"myfin-api/internal/dtos"
@@ -17,6 +18,7 @@ type TransactionsService interface {
 	DeleteTransactionsEntry(id string) error
 	UpdateTransactionsEntry(id string, entry dtos.UpdateTransactionsEntryDTO) (dtos.TransactionsEntryResponseDTO, error)
 	GetTransactionsEntryByID(id string) (dtos.TransactionsEntryResponseDTO, error)
+	GetTransactionDashboardData() (dtos.TransactionDashboardResponseDTO, error)
 }
 
 type transactionsService struct {
@@ -193,4 +195,33 @@ func (s *transactionsService) GetTransactionsEntryByID(id string) (dtos.Transact
 	}
 
 	return response, nil
+}
+
+func (s *transactionsService) GetTransactionDashboardData() (dtos.TransactionDashboardResponseDTO, error) {
+	entries, err := s.transactionsRepo.GetTransactions()
+
+	if err != nil {
+		return dtos.TransactionDashboardResponseDTO{}, err
+	}
+
+	var incomeTotal, expenseTotal float64
+	for _, entry := range entries {
+		switch entry.Type {
+		case "income":
+			incomeTotal += entry.Amount
+		case "expense":
+			expenseTotal += entry.Amount
+		}
+	}
+
+	roundedIncomeAmount := math.Ceil(incomeTotal*100) / 100
+	roundedExpenseAmount := math.Ceil(expenseTotal*100) / 100
+	totalAmount := incomeTotal - expenseTotal
+	roundedTotalAmount := math.Ceil(totalAmount*100) / 100
+
+	return dtos.TransactionDashboardResponseDTO{
+		IncomeAmount:  roundedIncomeAmount,
+		ExpenseAmount: roundedExpenseAmount,
+		TotalAmount:   roundedTotalAmount,
+	}, nil
 }

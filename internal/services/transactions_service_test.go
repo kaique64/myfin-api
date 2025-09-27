@@ -18,6 +18,14 @@ type MockTransactionsRepository struct {
 	mock.Mock
 }
 
+func (m *MockTransactionsRepository) GetTransactions() ([]*model.TransactionsEntryModel, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*model.TransactionsEntryModel), args.Error(1)
+}
+
 func (m *MockTransactionsRepository) Create(entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error) {
 	args := m.Called(entry)
 	if args.Get(0) == nil {
@@ -682,7 +690,7 @@ func TestTransactionsServiceGetAllWithFilterTitleOnly(t *testing.T) {
 
 	expectedFilter := types.FilterOptions{
 		Title:    "coffee",
-		Category: "", // Empty category filter
+		Category: "",
 	}
 
 	mockRepo.On("GetAllWithFilter", 5, 2, expectedFilter).Return(mockEntries, nil)
@@ -721,7 +729,7 @@ func TestTransactionsServiceGetAllWithFilterCategoryOnly(t *testing.T) {
 	}
 
 	expectedFilter := types.FilterOptions{
-		Title:    "", // Empty title filter
+		Title:    "",
 		Category: "transport",
 	}
 
@@ -811,7 +819,7 @@ func TestTransactionsServiceGetAllWithFilterEmptyResult(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Empty(t, result)
-	assert.NotNil(t, result) // Should return empty slice, not nil
+	assert.NotNil(t, result)
 
 	mockRepo.AssertExpectations(t)
 }
@@ -849,9 +857,9 @@ func TestTransactionsServiceUpdateTransactionsEntrySuccess(t *testing.T) {
 		PaymentMethod: "debitcard",
 		Description:   "Updated Description",
 		Date:          time.Date(2025, 10, 15, 0, 0, 0, 0, time.UTC),
-		Timestamp:     createdTime.Unix(), // Timestamp should remain the same
-		CreatedAt:     createdTime,        // CreatedAt should remain the same
-		UpdatedAt:     updatedTime,        // UpdatedAt should be updated
+		Timestamp:     createdTime.Unix(),
+		CreatedAt:     createdTime,
+		UpdatedAt:     updatedTime,
 	}
 
 	updateDTO := dtos.UpdateTransactionsEntryDTO{
@@ -880,7 +888,7 @@ func TestTransactionsServiceUpdateTransactionsEntrySuccess(t *testing.T) {
 	assert.Equal(t, "debitcard", result.PaymentMethod)
 	assert.Equal(t, "Updated Description", result.Description)
 	assert.Equal(t, "15/10/2025", result.Date)
-	assert.Equal(t, createdTime.Unix(), result.Timestamp) // Timestamp should remain unchanged
+	assert.Equal(t, createdTime.Unix(), result.Timestamp)
 	assert.Equal(t, createdTime.UTC().Format(time.RFC3339), result.CreatedAt)
 	assert.Equal(t, updatedTime.UTC().Format(time.RFC3339), result.UpdatedAt)
 
@@ -901,7 +909,7 @@ func TestTransactionsServiceUpdateTransactionsEntryInvalidDate(t *testing.T) {
 		Category:      "entertainment",
 		PaymentMethod: "debitcard",
 		Description:   "Updated Description",
-		Date:          "invalid-date", // Invalid date format
+		Date:          "invalid-date",
 	}
 
 	result, err := service.UpdateTransactionsEntry(objectID.Hex(), updateDTO)
@@ -1063,6 +1071,243 @@ func TestTransactionsServiceGetTransactionsEntryByIDInvalidID(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, dtos.TransactionsEntryResponseDTO{}, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataSuccess(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	testTransactions := []*model.TransactionsEntryModel{
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 1000.50,
+			Type:   "income",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 2500.75,
+			Type:   "income",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 500.25,
+			Type:   "expense",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 300.00,
+			Type:   "expense",
+		},
+	}
+
+	mockRepo.On("GetTransactions").Return(testTransactions, nil)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.NoError(t, err)
+	assert.Equal(t, 3501.25, result.IncomeAmount)
+	assert.Equal(t, 800.25, result.ExpenseAmount)
+	assert.Equal(t, 2701.00, result.TotalAmount)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataOnlyIncome(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	testTransactions := []*model.TransactionsEntryModel{
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 1500.00,
+			Type:   "income",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 750.50,
+			Type:   "income",
+		},
+	}
+
+	mockRepo.On("GetTransactions").Return(testTransactions, nil)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 2250.50, result.IncomeAmount)
+	assert.Equal(t, 0.0, result.ExpenseAmount)
+	assert.Equal(t, 2250.50, result.TotalAmount)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataOnlyExpenses(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	testTransactions := []*model.TransactionsEntryModel{
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 200.00,
+			Type:   "expense",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 150.75,
+			Type:   "expense",
+		},
+	}
+
+	mockRepo.On("GetTransactions").Return(testTransactions, nil)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 0.0, result.IncomeAmount)
+	assert.Equal(t, 350.75, result.ExpenseAmount)
+	assert.Equal(t, -350.75, result.TotalAmount)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataEmptyTransactions(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	testTransactions := []*model.TransactionsEntryModel{}
+
+	mockRepo.On("GetTransactions").Return(testTransactions, nil)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, result.IncomeAmount)
+	assert.Equal(t, 0.0, result.ExpenseAmount)
+	assert.Equal(t, 0.0, result.TotalAmount)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataRepositoryError(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	expectedError := errors.New("database connection error")
+	mockRepo.On("GetTransactions").Return(nil, expectedError)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err)
+	assert.Equal(t, dtos.TransactionDashboardResponseDTO{}, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataWithUnknownType(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	testTransactions := []*model.TransactionsEntryModel{
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 1000.00,
+			Type:   "income",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 500.00,
+			Type:   "expense",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 250.00,
+			Type:   "unknown",
+		},
+	}
+
+	mockRepo.On("GetTransactions").Return(testTransactions, nil)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.NoError(t, err)
+	assert.Equal(t, 1000.00, result.IncomeAmount)
+	assert.Equal(t, 500.00, result.ExpenseAmount)
+	assert.Equal(t, 500.00, result.TotalAmount)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataWithRoundingUp(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	testTransactions := []*model.TransactionsEntryModel{
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 1000.111,
+			Type:   "income",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 2500.764,
+			Type:   "income",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 500.231,
+			Type:   "expense",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 300.009,
+			Type:   "expense",
+		},
+	}
+
+	mockRepo.On("GetTransactions").Return(testTransactions, nil)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 3500.88, result.IncomeAmount)
+	assert.Equal(t, 800.24, result.ExpenseAmount)
+	assert.Equal(t, 2700.64, result.TotalAmount)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTransactionsServiceGetTransactionDashboardDataWithExactRounding(t *testing.T) {
+	mockRepo := new(MockTransactionsRepository)
+	service := NewTransactionsService(mockRepo)
+
+	testTransactions := []*model.TransactionsEntryModel{
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 100.001,
+			Type:   "income",
+		},
+		{
+			ID:     primitive.NewObjectID(),
+			Amount: 50.009,
+			Type:   "expense",
+		},
+	}
+
+	mockRepo.On("GetTransactions").Return(testTransactions, nil)
+
+	result, err := service.GetTransactionDashboardData()
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 100.01, result.IncomeAmount) 
+	assert.Equal(t, 50.01, result.ExpenseAmount)
+	assert.Equal(t, 50.00, result.TotalAmount)
 
 	mockRepo.AssertExpectations(t)
 }

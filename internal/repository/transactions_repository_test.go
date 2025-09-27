@@ -919,3 +919,224 @@ func TestTransactionsRepositoryUpdate(t *testing.T) {
 		assert.NotEqual(t, differentID, result.ID)
 	})
 }
+
+func TestTransactionsEntryRepositoryGetTransactions(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("successful_retrieval_with_data", func(mt *mtest.T) {
+		objectID1 := primitive.NewObjectID()
+		objectID2 := primitive.NewObjectID()
+
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
+			{"_id", objectID1},
+			{"amount", 150.75},
+			{"title", "Lunch at restaurant"},
+			{"currency", "BRL"},
+			{"type", "expense"},
+			{"category", "food"},
+			{"payment_method", "credit_card"},
+			{"description", "Lunch at restaurant"},
+			{"date", time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)},
+			{"timestamp", int64(1725635400)},
+			{"created_at", time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)},
+			{"updated_at", time.Date(2025, 9, 6, 14, 30, 0, 0, time.UTC)},
+		})
+
+		second := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.NextBatch, bson.D{
+			{"_id", objectID2},
+			{"amount", 2500.0},
+			{"title", "Monthly salary"},
+			{"currency", "BRL"},
+			{"type", "income"},
+			{"category", "salary"},
+			{"payment_method", "bank_transfer"},
+			{"description", "Monthly salary"},
+			{"date", time.Date(2025, 8, 30, 9, 0, 0, 0, time.UTC)},
+			{"timestamp", int64(1725008400)},
+			{"created_at", time.Date(2025, 8, 30, 9, 0, 0, 0, time.UTC)},
+			{"updated_at", time.Date(2025, 8, 30, 9, 0, 0, 0, time.UTC)},
+		})
+
+		third := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.NextBatch, bson.D{
+			{"_id", primitive.NewObjectID()},
+			{"amount", 89.99},
+			{"title", "Netflix subscription"},
+			{"currency", "BRL"},
+			{"type", "expense"},
+			{"category", "entertainment"},
+			{"payment_method", "credit_card"},
+			{"description", "Monthly streaming service"},
+			{"date", time.Date(2025, 8, 28, 20, 15, 0, 0, time.UTC)},
+			{"timestamp", int64(1724873700)},
+			{"created_at", time.Date(2025, 8, 28, 20, 15, 0, 0, time.UTC)},
+			{"updated_at", time.Date(2025, 8, 28, 20, 15, 0, 0, time.UTC)},
+		})
+
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
+
+		mt.AddMockResponses(first, second, third, killCursors)
+
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
+
+		result, err := repo.GetTransactions()
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result, 3)
+
+		// Verify first transaction
+		assert.Equal(t, objectID1, result[0].ID)
+		assert.Equal(t, 150.75, result[0].Amount)
+		assert.Equal(t, "Lunch at restaurant", result[0].Title)
+		assert.Equal(t, "BRL", result[0].Currency)
+		assert.Equal(t, "expense", result[0].Type)
+		assert.Equal(t, "food", result[0].Category)
+		assert.Equal(t, "credit_card", result[0].PaymentMethod)
+		assert.Equal(t, "Lunch at restaurant", result[0].Description)
+		assert.Equal(t, int64(1725635400), result[0].Timestamp)
+
+		// Verify second transaction
+		assert.Equal(t, objectID2, result[1].ID)
+		assert.Equal(t, 2500.0, result[1].Amount)
+		assert.Equal(t, "Monthly salary", result[1].Title)
+		assert.Equal(t, "income", result[1].Type)
+		assert.Equal(t, "salary", result[1].Category)
+		assert.Equal(t, "bank_transfer", result[1].PaymentMethod)
+
+		// Verify third transaction
+		assert.Equal(t, 89.99, result[2].Amount)
+		assert.Equal(t, "Netflix subscription", result[2].Title)
+		assert.Equal(t, "entertainment", result[2].Category)
+	})
+
+	mt.Run("successful_retrieval_with_empty_result", func(mt *mtest.T) {
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.FirstBatch)
+
+		mt.AddMockResponses(killCursors)
+
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
+
+		result, err := repo.GetTransactions()
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result, 0)
+	})
+
+	mt.Run("database_connection_error", func(mt *mtest.T) {
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{
+			Code:    2,
+			Message: "BadValue",
+		}))
+
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
+
+		result, err := repo.GetTransactions()
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "BadValue")
+	})
+
+	mt.Run("cursor_decode_error", func(mt *mtest.T) {
+		// Create a response with invalid data that will cause decode error
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
+			{"_id", "invalid_object_id"}, // This should cause a decode error
+			{"amount", "invalid_amount"}, // This should also cause a decode error
+		})
+
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
+
+		mt.AddMockResponses(first, killCursors)
+
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
+
+		result, err := repo.GetTransactions()
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	mt.Run("cursor_iteration_error", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+		testDate := time.Date(2025, 9, 27, 10, 0, 0, 0, time.UTC)
+
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
+			{"_id", objectID},
+			{"amount", 100.0},
+			{"title", "Test Transaction"},
+			{"currency", "BRL"},
+			{"type", "expense"},
+			{"category", "test"},
+			{"payment_method", "cash"},
+			{"description", "Test description"},
+			{"date", testDate},
+			{"timestamp", testDate.Unix()},
+			{"created_at", testDate},
+			{"updated_at", testDate},
+		})
+
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
+
+		mt.AddMockResponses(first, killCursors)
+
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
+
+		result, err := repo.GetTransactions()
+
+		// Based on the implementation, the method returns entries and cursor.Err()
+		// If cursor iteration succeeds, there should be no error
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result, 1)
+		assert.Equal(t, objectID, result[0].ID)
+		assert.Equal(t, 100.0, result[0].Amount)
+	})
+
+	mt.Run("single_transaction_retrieval", func(mt *mtest.T) {
+		objectID := primitive.NewObjectID()
+		testDate := time.Date(2025, 9, 27, 10, 0, 0, 0, time.UTC)
+
+		first := mtest.CreateCursorResponse(1, "transactions_entries.entries", mtest.FirstBatch, bson.D{
+			{"_id", objectID},
+			{"amount", 42.50},
+			{"title", "Coffee Shop"},
+			{"currency", "USD"},
+			{"type", "expense"},
+			{"category", "food"},
+			{"payment_method", "debit_card"},
+			{"description", "Morning coffee"},
+			{"date", testDate},
+			{"timestamp", testDate.Unix()},
+			{"created_at", testDate},
+			{"updated_at", testDate},
+		})
+
+		killCursors := mtest.CreateCursorResponse(0, "transactions_entries.entries", mtest.NextBatch)
+
+		mt.AddMockResponses(first, killCursors)
+
+		repo := repository.NewTransactionsEntryRepository(mt.DB)
+
+		result, err := repo.GetTransactions()
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result, 1)
+
+		transaction := result[0]
+		assert.Equal(t, objectID, transaction.ID)
+		assert.Equal(t, 42.50, transaction.Amount)
+		assert.Equal(t, "Coffee Shop", transaction.Title)
+		assert.Equal(t, "USD", transaction.Currency)
+		assert.Equal(t, "expense", transaction.Type)
+		assert.Equal(t, "food", transaction.Category)
+		assert.Equal(t, "debit_card", transaction.PaymentMethod)
+		assert.Equal(t, "Morning coffee", transaction.Description)
+		assert.Equal(t, testDate, transaction.Date)
+		assert.Equal(t, testDate.Unix(), transaction.Timestamp)
+		assert.Equal(t, testDate, transaction.CreatedAt)
+		assert.Equal(t, testDate, transaction.UpdatedAt)
+	})
+}

@@ -16,6 +16,7 @@ import (
 )
 
 const transactionsPath = "/transactions"
+const transactionsDashboardPath = "/transactions/dashboard"
 
 var transactionsIDPath = fmt.Sprintf("%s/:id", transactionsPath)
 
@@ -49,6 +50,10 @@ func main() {
 
 	r.GET(transactionsPath, func(c *gin.Context) {
 		handler.GetAll(c)
+	})
+
+	r.GET(transactionsDashboardPath, func(c *gin.Context) {
+		handler.GetTransactionDashboardData(c)
 	})
 
 	r.GET(transactionsIDPath, func(c *gin.Context) {

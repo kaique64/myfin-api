@@ -20,6 +20,7 @@ type TransactionsEntryRepository interface {
 	Delete(id string) error
 	Update(id string, entry *model.TransactionsEntryModel) (*model.TransactionsEntryModel, error)
 	GetByID(id string) (*model.TransactionsEntryModel, error)
+	GetTransactions() ([]*model.TransactionsEntryModel, error)
 }
 
 type transactionsEntryRepository struct {
@@ -204,4 +205,28 @@ func (r *transactionsEntryRepository) GetByID(id string) (*model.TransactionsEnt
 	}
 
 	return &entry, nil
+}
+
+func (r *transactionsEntryRepository) GetTransactions() ([]*model.TransactionsEntryModel, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := r.collection.Find(ctx, bson.M{})
+
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	entries := make([]*model.TransactionsEntryModel, 0)
+
+	for cursor.Next(ctx) {
+		var entry model.TransactionsEntryModel
+		if err := cursor.Decode(&entry); err != nil {
+			return nil, err
+		}
+		entries = append(entries, &entry)
+	}
+
+	return entries, cursor.Err()
 }

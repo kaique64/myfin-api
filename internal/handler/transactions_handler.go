@@ -15,6 +15,7 @@ type TransactionsHandler interface {
 	Delete(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	GetByID(ctx *gin.Context)
+	GetTransactionDashboardData(ctx *gin.Context)
 }
 
 type transactionsHandler struct {
@@ -142,3 +143,16 @@ func (h *transactionsHandler) GetByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, entry)
 }
 
+func (h *transactionsHandler) GetTransactionDashboardData(ctx *gin.Context) {
+	data, err := h.transactionsService.GetTransactionDashboardData()
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to retrieve dashboard data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, data)
+}
